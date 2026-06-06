@@ -16,75 +16,72 @@ DIALECT ::= -std=$(STD)\
 	-fstrict-aliasing\
 	-fstrict-flex-arrays
 
-WARNINGS ::= -Wall\
+ERRORS ::= -pedantic-errors\
+	-Wall\
+	-Walloc-zero\
+	-Warith-conversion\
+	-Warray-bounds=2\
+	-Wbad-function-cast\
 	-Wbidi-chars=any,ucn\
+	-Wcalloc-transposed-args\
+	-Wcast-align\
 	-Wcast-qual\
+	-Wconversion\
 	-Wdisabled-optimization\
+	-Wdouble-promotion\
+	-Wduplicated-branches\
+	-Wduplicated-cond\
+	-Werror\
 	-Wextra\
+	-Wflex-array-member-not-at-end\
+	-Wfloat-equal\
+	-Wformat=2\
+	-Wformat-signedness\
+	-Wformat-overflow=2\
+	-Wformat-truncation=2\
 	-Whardened\
+	-Wimplicit-fallthrough=5\
+	-Winit-self\
+	-Winline\
 	-Winvalid-pch\
+	-Winvalid-utf8\
+	-Wjump-misses-init\
+	-Wkeyword-macro\
 	-Wlogical-op\
+	-Wmissing-include-dirs\
+	-Wmissing-noreturn\
+	-Wmissing-prototypes\
+	-Wmissing-variable-declarations\
+	-Wmultichar\
+	-Wnested-externs\
+	-Wnull-dereference\
+	-Wnormalized=nfkc\
 	-Wpadded\
+	-Wpedantic\
+	-Wpointer-arith\
+	-Wredundant-decls\
 	-Wshadow\
+	-Wstack-protector\
 	-Wstrict-overflow=5\
+	-Wstringop-overflow=4\
+	-Wstringop-truncation\
+	-Wsuggest-attribute=noreturn\
+	-Wswitch-default\
+	-Wswitch-enum\
 	-Wtrailing-whitespace=any\
+	-Wtrampolines\
+	-Wtrivial-auto-var-init\
+	-Wtype-limits\
+	-Wundef\
 	-Wunknown-pragmas\
 	-Wunsafe-loop-optimizations\
-	-Wvector-operation-performance
-
-ERROR_WARNINGS ::= \
-	-Werror=alloc-zero\
-	-Werror=arith-conversion\
-	-Werror=array-bounds=2\
-	-Werror=bad-function-cast\
-	-Werror=bidi-chars\
-	-Werror=calloc-transposed-args\
-	-Werror=cast-align\
-	-Werror=conversion\
-	-Werror=double-promotion\
-	-Werror=duplicated-branches\
-	-Werror=duplicated-cond\
-	-Werror=flex-array-member-not-at-end\
-	-Werror=float-equal\
-	-Werror=format=2\
-	-Werror=format-signedness\
-	-Werror=format-overflow=2\
-	-Werror=format-truncation=2\
-	-Werror=init-self\
-	-Werror=inline\
-	-Werror=invalid-utf8\
-	-Werror=implicit-fallthrough=5\
-	-Werror=jump-misses-init\
-	-Werror=keyword-macro\
-	-Werror=nested-externs\
-	-Werror=null-dereference\
-	-Werror=normalized=nfkc\
-	-Werror=missing-include-dirs\
-	-Werror=missing-noreturn\
-	-Werror=missing-prototypes\
-	-Werror=missing-variable-declarations\
-	-Werror=multichar\
-	-Werror=pedantic\
-	-Werror=pointer-arith\
-	-Werror=redundant-decls\
-	-Werror=stack-protector\
-	-Werror=stringop-overflow=4\
-	-Werror=stringop-truncation\
-	-Werror=suggest-attribute=noreturn\
-	-Werror=switch-default\
-	-Werror=switch-enum\
-	-Werror=trampolines\
-	-Werror=trivial-auto-var-init\
-	-Werror=type-limits\
-	-Werror=undef\
-	-Werror=unused-const-variable\
-	-Werror=unused-macros\
-	-Werror=use-after-free=3\
-	-Werror=useless-cast\
-	-Werror=write-strings\
-	-Werror=zero-as-null-pointer-constant
-
-ERRORS ::= $(ERROR_WARNINGS) -pedantic-errors
+	-Wunused-const-variable\
+	-Wunused-macros\
+	-Wuse-after-free=3\
+	-Wuseless-cast\
+	-Wvector-operation-performance\
+	-Wwrite-strings\
+	-Wzero-as-null-pointer-constant
 
 # INSTRUMENTATION ::= -fhardened
 
@@ -95,7 +92,6 @@ CC ::= gcc
 CFLAGS ::= $(PROCESS_FILES)\
 	$(DIALECT)\
 	$(OPTIMIZATION)\
-	$(WARNINGS)\
 	$(ERRORS)\
 	$(INSTRUMENTATION)\
 	-Iinclude\

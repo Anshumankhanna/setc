@@ -1,76 +1,78 @@
 CompileFlags:
     Add:
         - -std=c23
+        - -I../include
+        - -Wno-unknown-warning-option
+        - -pedantic-errors
         - -Wall
+        - -Walloc-zero
+        - -Warith-conversion
+        - -Warray-bounds=2
+        - -Wbad-function-cast
         - -Wbidi-chars=any,ucn
+        - -Wcalloc-transposed-args
+        - -Wcast-align
         - -Wcast-qual
+        - -Wconversion
         - -Wdisabled-optimization
+        - -Wdouble-promotion
+        - -Wduplicated-branches
+        - -Wduplicated-cond
+        - -Werror
         - -Wextra
+        - -Wflex-array-member-not-at-end
+        - -Wfloat-equal
+        - -Wformat=2
+        - -Wformat-signedness
+        - -Wformat-overflow=2
+        - -Wformat-truncation=2
         - -Whardened
+        - -Wimplicit-fallthrough=5
+        - -Winit-self
+        - -Winline
         - -Winvalid-pch
+        - -Winvalid-utf8
+        - -Wjump-misses-init
+        - -Wkeyword-macro
         - -Wlogical-op
+        - -Wmissing-include-dirs
+        - -Wmissing-noreturn
+        - -Wmissing-prototypes
+        - -Wmissing-variable-declarations
+        - -Wmultichar
+        - -Wnested-externs
+        - -Wnull-dereference
+        - -Wnormalized=nfkc
         - -Wpadded
+        - -Wpedantic
+        - -Wpointer-arith
+        - -Wredundant-decls
         - -Wshadow
+        - -Wstack-protector
         - -Wstrict-overflow=5
+        - -Wstringop-overflow=4
+        - -Wstringop-truncation
+        - -Wsuggest-attribute=noreturn
+        - -Wswitch-default
+        - -Wswitch-enum
         - -Wtrailing-whitespace=any
+        - -Wtrampolines
+        - -Wtrivial-auto-var-init
+        - -Wtype-limits
+        - -Wundef
         - -Wunknown-pragmas
         - -Wunsafe-loop-optimizations
+        - -Wunused-const-variable
+        - -Wunused-macros
+        - -Wuse-after-free=3
+        - -Wuseless-cast
         - -Wvector-operation-performance
-        - -Werror=-Walloc-zero
-        - -Werror=-Warith-conversion
-        - -Werror=-Warray-bounds=2
-        - -Werror=-Wbad-function-cast
-        - -Werror=-Wbidi-chars
-        - -Werror=-Wcalloc-transposed-args
-        - -Werror=-Wcast-align
-        - -Werror=-Wconversion
-        - -Werror=-Wdouble-promotion
-        - -Werror=-Wduplicated-branches
-        - -Werror=-Wduplicated-cond
-        - -Werror=-Wflex-array-member-not-at-end
-        - -Werror=-Wfloat-equal
-        - -Werror=-Wformat=2
-        - -Werror=-Wformat-signedness
-        - -Werror=-Wformat-overflow=2
-        - -Werror=-Wformat-truncation=2
-        - -Werror=-Winit-self
-        - -Werror=-Winline
-        - -Werror=-Winvalid-utf8
-        - -Werror=-Wimplicit-fallthrough=5
-        - -Werror=-Wjump-misses-init
-        - -Werror=-Wkeyword-macro
-        - -Werror=-Wnested-externs
-        - -Werror=-Wnull-dereference
-        - -Werror=-Wnormalized=nfkc
-        - -Werror=-Wmissing-include-dirs
-        - -Werror=-Wmissing-noreturn
-        - -Werror=-Wmissing-prototypes
-        - -Werror=-Wmissing-variable-declarations
-        - -Werror=-Wmultichar
-        - -Werror=-Wpedantic
-        - -Werror=-Wpointer-arith
-        - -Werror=-Wredundant-decls
-        - -Werror=-Wstack-protector
-        - -Werror=-Wstringop-overflow=4
-        - -Werror=-Wstringop-truncation
-        - -Werror=-Wsuggest-attribute=noreturn
-        - -Werror=-Wswitch-default
-        - -Werror=-Wswitch-enum
-        - -Werror=-Wtrampolines
-        - -Werror=-Wtrivial-auto-var-init
-        - -Werror=-Wtype-limits
-        - -Werror=-Wundef
-        - -Werror=-Wunused-const-variable
-        - -Werror=-Wunused-macros
-        - -Werror=-Wuse-after-free=3
-        - -Werror=-Wuseless-cast
-        - -Werror=-Wwrite-strings
-        - -Werror=-Wzero-as-null-pointer-constan
-        - -pedantic-errors
-        - -I../include
+        - -Wwrite-strings
+        - -Wzero-as-null-pointer-constant
     Compiler: gcc
 ---
 If:
-    PathMatch: include/.*\.h
+    PathMatch: include/.*.h
 CompileFlags:
     Add: [-xc-header]
+    Remove: [-Wunused-macros]

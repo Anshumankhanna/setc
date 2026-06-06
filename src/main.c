@@ -1,6 +1,5 @@
-#include <stdio.h>
+#include "struct_string.h"
 
 int main() {
-	printf("This is a C file.\n");
 	return 0;
 }
