@@ -32,7 +32,6 @@ CompileFlags:
         - -Winline
         - -Winvalid-pch
         - -Winvalid-utf8
-        - -Wjump-misses-init
         - -Wkeyword-macro
         - -Wlogical-op
         - -Wmissing-include-dirs

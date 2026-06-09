@@ -2,7 +2,7 @@
 # EDITABLE FLAGS
 # ------------
 # These are kept separate so that if required, they can be changed directly in the command line.
-OPTIMIZATION ::= -O2
+OPTIMIZATION ::= 2
 PROCESS_FILES ::= -pipe
 STD ::= c23
 
@@ -45,7 +45,6 @@ ERRORS ::= -pedantic-errors\
 	-Winline\
 	-Winvalid-pch\
 	-Winvalid-utf8\
-	-Wjump-misses-init\
 	-Wkeyword-macro\
 	-Wlogical-op\
 	-Wmissing-include-dirs\
@@ -91,7 +90,7 @@ ERRORS ::= -pedantic-errors\
 CC ::= gcc
 CFLAGS ::= $(PROCESS_FILES)\
 	$(DIALECT)\
-	$(OPTIMIZATION)\
+	-O$(OPTIMIZATION)\
 	$(ERRORS)\
 	$(INSTRUMENTATION)\
 	-Iinclude\
@@ -138,7 +137,7 @@ $(TARGET) : $(OBJS) | $(BIN_DIR)
 
 # Running the target
 run : $(TARGET)
-	$<
+	$< $(ARGS)
 
 # If we want to check the assembly output of a file.
 asm : $(ASMS)
