@@ -20,12 +20,15 @@ struct metadata {
 	[[nodiscard]] extern inline size_t _##FIELD(const struct metadata *const restrict hdr);\
 	[[nodiscard]] extern inline size_t *_ref_##FIELD(struct metadata *const restrict hdr);
 
+#define const_metadata_const_cast(ptr) (const struct metadata *const) ptr
+#define metadata_const_cast(ptr) (struct metadata *const) ptr
+
 DEFINE_PRIVATE_FIELD_FUNCS(cap)
-#define cap(ptr) _cap((struct metadata *) ptr)
-#define ref_cap(ptr) _ref_cap((struct metadata *) ptr)
+#define cap(ptr) _cap(const_metadata_const_cast(ptr))
+#define ref_cap(ptr) _ref_cap(metadata_const_cast(ptr))
 
 DEFINE_PRIVATE_FIELD_FUNCS(len)
-#define len(ptr) _len((struct metadata *) ptr)
-#define ref_len(ptr) _ref_len((struct metadata *) ptr)
+#define len(ptr) _len(const_metadata_const_cast(ptr))
+#define ref_len(ptr) _ref_len(metadata_const_cast(ptr))
 
 #endif

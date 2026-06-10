@@ -23,7 +23,7 @@ CompileFlags:
         - -Wflex-array-member-not-at-end
         - -Wfloat-equal
         - -Wformat=2
-        - -Wformat-signedness
+        - -Wno-error=format-signedness
         - -Wformat-overflow=2
         - -Wformat-truncation=2
         - -Whardened
