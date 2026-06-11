@@ -99,8 +99,6 @@ int main(const int argc, const char **argv) {
 		default:
 	}
 
-	printf("Directory created successfully!\n");
-
 cleanup:
 	// Cleanup.
 	for (size_t index = 0; index < sizeof args / sizeof args[0]; ++index) {
