@@ -17,7 +17,6 @@ DIALECT ::= -std=$(STD)\
 	-fstrict-flex-arrays
 
 ERRORS ::= -pedantic-errors\
-	-Wall\
 	-Walloc-zero\
 	-Warith-conversion\
 	-Warray-bounds=2\
@@ -113,6 +112,8 @@ TARGET ::= bin/setc.exe
 
 ASM_DIR ::= asms
 ASMS ::= $(SRCS:$(SRC_DIR)/%.c=$(ASM_DIR)/%.S)
+
+ARGS ::= "-d ."
 
 # ------------
 # COMPILATION TARGETS

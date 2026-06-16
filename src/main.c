@@ -7,11 +7,27 @@
 #include <string.h>
 #include <windows.h>
 
-#define len_from_sizeof(arr) sizeof arr / sizeof arr[0]
-#define lit_strncmp(buff, lit) strncmp(buff, lit, sizeof lit - 1) == 0
-#define error() printf("\x1B[31mSome error occurred\n\x1B[39m");
+// We first test to make sure that this function isn't being used on a pointer type and is being used on an array type only,
+// If we have a array type `int arr[10]`, then `typeof_unqual(&arr) == int *(*)[10]`,
+// Since the type always has a numeric value, we can't write a definite type for the arrays to match,
+// However, for pointer type `int *arr`, then `typeof_unqual(&arr) == int ** == typeof(*arr) **`, hence we can match that value and catch pointers,
+// And if it is not a pointer, it must be an array type and non-array types will produce error as we are using subscript operation.
+#define len_from_sizeof(arr)                                                   \
+	_Generic(&arr,                                                             \
+		typeof_unqual(*arr) **: (void)0,                                              \
+		default: (sizeof arr / sizeof arr[0]))
+#define lit_strncmp(buff, lit) _lit_strncmp(buff, lit, sizeof lit - 1)
+[[nodiscard]] static inline bool _lit_strncmp(const char *const restrict buff,
+											  const char *const restrict lit,
+											  const size_t lit_size) {
+	return strncmp(buff, lit, lit_size) == 0;
+}
 
-int main(const int argc, const char **argv) {
+static inline void error() {
+	printf("\x1B[31mSome error occurred\n\x1B[39m");
+}
+
+int main(const int argc, const char *const argv[const]) {
 	if (argc <= 1) {
 		printf("Require more arguments.\n");
 		return 1;
@@ -86,6 +102,7 @@ int main(const int argc, const char **argv) {
 			 GetFullPathName(template_dir->buff, _MAX_PATH,
 							 abs_template_dir.buff, nullptr)) >= _MAX_PATH) {
 		// TODO: Error.
+		error();
 		goto cleanup;
 	}
 
