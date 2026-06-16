@@ -1,3 +1,5 @@
+#include "metadata.h"
+#include "struct_array.h"
 #include "struct_string.h"
 #include <direct.h>
 #include <errno.h>
@@ -12,10 +14,6 @@
 // Since the type always has a numeric value, we can't write a definite type for the arrays to match,
 // However, for pointer type `int *arr`, then `typeof_unqual(&arr) == int ** == typeof(*arr) **`, hence we can match that value and catch pointers,
 // And if it is not a pointer, it must be an array type and non-array types will produce error as we are using subscript operation.
-#define len_from_sizeof(arr)                                                   \
-	_Generic(&arr,                                                             \
-		typeof_unqual(*arr) **: (void)0,                                              \
-		default: (sizeof arr / sizeof arr[0]))
 #define lit_strncmp(buff, lit) _lit_strncmp(buff, lit, sizeof lit - 1)
 [[nodiscard]] static inline bool _lit_strncmp(const char *const restrict buff,
 											  const char *const restrict lit,
@@ -33,15 +31,9 @@ int main(const int argc, const char *const argv[const]) {
 		return 1;
 	}
 
-	struct string *args[argc - 1];
-	// Initializing array independently.
-	// This is so that when we try to create strings, if we have an error, the
-	// memory isn't corrupted because we freed random addresses.
-	for (size_t index = 0; index < len_from_sizeof(args); ++index) {
-		args[index] = nullptr;
-	}
+	darray(struct_string_p) *args = darray_new(struct_string_p, (size_t) argc - 1);
 
-	for (size_t index = 0; index < len_from_sizeof(args); ++index) {
+	for (size_t index = 0; index < len(args); ++index) {
 		const size_t curr_arg_len = strnlen_s(argv[index + 1], SIZE_MAX);
 		if (curr_arg_len == SIZE_MAX) {
 			// TODO: Handle errors here.
@@ -49,8 +41,8 @@ int main(const int argc, const char *const argv[const]) {
 			return 1;
 		}
 
-		args[index] = struct_string_new(argv[index + 1], curr_arg_len);
-		if (args[index] == nullptr) {
+		args->buff[index] = struct_string_new_value(argv[index + 1]);
+		if (args->buff[index] == nullptr) {
 			goto cleanup;
 		}
 	}
@@ -58,24 +50,24 @@ int main(const int argc, const char *const argv[const]) {
 	// This `const` qualifier won't let us free `template_dir` since
 	// `template_dir` is acting as a readable string only.
 	const struct string *template_dir = nullptr;
-	for (size_t index = 0; index < len_from_sizeof(args); ++index) {
-		if (lit_strncmp(args[index]->buff, "--help") ||
-			lit_strncmp(args[index]->buff, "-h")) {
+	for (size_t index = 0; index < len(args); ++index) {
+		if (lit_strncmp(args->buff[index]->buff, "--help") ||
+			lit_strncmp(args->buff[index]->buff, "-h")) {
 			// TODO: Generate the help menu.
 			printf("The help menu will be available soon.\n");
 			break;
-		} else if (lit_strncmp(args[index]->buff, "--version") ||
-				   lit_strncmp(args[index]->buff, "-v")) {
+		} else if (lit_strncmp(args->buff[index]->buff, "--version") ||
+				   lit_strncmp(args->buff[index]->buff, "-v")) {
 			printf("Currently at version 0.0.1.\n");
 			break;
-		} else if (lit_strncmp(args[index]->buff, "-d")) {
-			if (index + 1 == len_from_sizeof(args)) {
+		} else if (lit_strncmp(args->buff[index]->buff, "-d")) {
+			if (index + 1 == len(args)) {
 				// TODO: Error here.
 				error();
 				goto cleanup;
 			}
 
-			template_dir = args[index + 1];
+			template_dir = args->buff[index + 1];
 			break;
 		}
 	}
@@ -118,9 +110,7 @@ int main(const int argc, const char *const argv[const]) {
 
 cleanup:
 	// Cleanup.
-	for (size_t index = 0; index < sizeof args / sizeof args[0]; ++index) {
-		struct_string_del(args[index]);
-	}
+	darray_del(struct_string_p, args);
 
 	return 0;
 }

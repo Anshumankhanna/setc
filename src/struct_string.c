@@ -1,30 +1,52 @@
-#include "metadata.h"
+#include "struct_string.h"
+#include "struct_array.h"
+#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "struct_string.h"
 
-[[nodiscard]] struct string *struct_string_new(const char *const restrict raw_string, const size_t raw_string_len) {
-	struct string *new = malloc(sizeof(struct metadata) + sizeof(char) * (raw_string_len + 1));
+[[nodiscard]] struct string *
+struct_string_new_value(const char *const restrict raw_string) {
+	if (raw_string == nullptr) {
+		// TODO: Handle error.
+		return nullptr;
+	}
+
+	const size_t raw_string_len = strnlen(raw_string, SIZE_MAX);
+	if (raw_string_len == SIZE_MAX) {
+		// TODO: Handle error.
+		return nullptr;
+	}
+
+	struct string *new = malloc(sizeof(struct string) +
+								sizeof *raw_string * (raw_string_len + 1));
 	if (new == nullptr) {
+		// TODO: Handle error.
 		return new;
 	}
 
-	*ref_cap(new) = raw_string_len;
-	// In case we have been provided a length but not a string, we just create an empty string with a great capacity.
-	if (raw_string != nullptr) {
-		strncpy_s(new -> buff, new -> hdr.cap + 1, raw_string, raw_string_len);
-	} else {
-		new -> buff[0] = '\0';
-	}
-	// We are doing it like this since this is the only way to truly capture the length of the string,
-	// If `raw_string[n] == '\0'` for `0 <= n < raw_string_len`, then the length of the string copied is varied,
-	// We could have ignored this but it would create an issue in the program where `len` doesn't represent the real length.
-	*ref_len(new) = strnlen_s(new -> buff, new -> hdr.cap);
+	*ref_cap(new) = *ref_len(new) = raw_string_len;
+	memcpy(new->buff, raw_string, sizeof *raw_string * len(new));
+	new->buff[len(new)] = '\0';
 
 	return new;
 }
+[[nodiscard]] struct string *struct_string_new_length(const size_t len,
+													  const char character) {
+	struct string *new =
+		malloc(sizeof(struct string) + sizeof character * (len + 1));
+	if (new == nullptr) {
+		// TODO: Handle error.
+		return new;
+	}
 
-void struct_string_del(struct string *ptr) {
-	free(ptr);
-	ptr = nullptr;
+	*ref_cap(new) = *ref_len(new) = len;
+	memset(new->buff, character, sizeof character * len(new));
+	new->buff[len(new)] = '\0';
+
+	return new;
 }
+extern inline void struct_string_del(struct string *this);
+
+darray_decl_del(struct_string_p);
+darray_def_new(struct_string_p)

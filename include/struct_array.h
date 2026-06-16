@@ -1,37 +1,56 @@
 #ifndef ARRAY_H
 #define ARRAY_H
 
-#define decl_single_word_type(TYPE, NAME) typedef TYPE NAME
-#define array(TYPE) struct TYPE##_array
+#include "metadata.h"
+#include <stddef.h>
 
-#define array_decl(TYPE)                                                       \
-	struct array(TYPE) {                                                       \
+#define decl_single_word_type(TYPE, NAME) typedef TYPE NAME
+
+#define darray(TYPE) struct TYPE##_darray
+#define darray_decl(TYPE)                                                      \
+	darray(TYPE) {                                                             \
 		struct metadata hdr;                                                   \
-		TYPE *buff;                                                            \
+		TYPE buff[];                                                           \
 	}
 
-#define array_new(TYPE)                                                        \
-	[[nodiscard]] TYPE##_array *TYPE##_array_new(                              \
-		const TYPE *const restrict _buff, const size_t _len) {                 \
-		array(TYPE) *new =                                                     \
-			malloc(sizeof(struct metadata) + sizeof(TYPE) * _len);             \
+#define darray_def_new(TYPE)                                                   \
+	[[nodiscard]] darray(TYPE) *                                        \
+		_##TYPE##_darray_new(const size_t len, const size_t elem_size) {       \
+		darray(TYPE) *new = malloc(sizeof(darray(TYPE)) + elem_size * len);    \
 		if (new == nullptr) {                                                  \
 			return new;                                                        \
 		}                                                                      \
                                                                                \
-		*ref_cap(new) = *ref_len(new) = _len;                                  \
-		if (_buff != nullptr || _len == 0) {                                   \
-			memcpy(new->buff, _buff, _len);                                    \
-		}                                                                      \
+		*ref_cap(new) = *ref_len(new) = len;                                   \
+		memset(new->buff, 0, elem_size * len);                                 \
                                                                                \
 		return new;                                                            \
 	}
-#define array_del(TYPE)                                                        \
-	static inline void TYPE##_array_del(array(TYPE) * _ptr) {                  \
-		if (_ptr != nullptr) {                                                 \
-			free_sized(_ptr,                                                   \
-					   sizeof(struct metadata) + sizeof(TYPE) * _ptr->cap);    \
-		}                                                                      \
+#define darray_decl_new(TYPE)                                                  \
+	[[nodiscard]] darray(TYPE) *                                 \
+		_##TYPE##_darray_new(const size_t len, const size_t elem_size)
+#define darray_new(TYPE, len) _##TYPE##_darray_new(len, sizeof(TYPE))
+
+#define darray_def_del(TYPE)                                                   \
+	inline void _##TYPE##_darray_del(darray(TYPE) * this) {                    \
+		free(this);                                                            \
+	}
+#define darray_decl_del(TYPE)                                                  \
+	extern inline void _##TYPE##_darray_del(darray(TYPE) * this)
+#define darray_del(TYPE, this) _##TYPE##_darray_del(this)
+
+#define sarray(TYPE) struct TYPE##_sarray
+#define sarray_decl(TYPE)                                                      \
+	sarray(TYPE) {                                                             \
+		struct metadata hdr;                                                   \
+		TYPE *buff;                                                            \
+	}
+
+#define const_sarray(TYPE) struct const_##TYPE##_sarray
+#define const_sarray_decl(TYPE)                                                \
+	const_sarray(TYPE) {                                                       \
+		struct metadata hdr;                                                   \
+		TYPE *const buff;                                                      \
 	}
 
 #endif
