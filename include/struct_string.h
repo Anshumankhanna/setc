@@ -14,15 +14,12 @@ struct string {
 struct_string_new_value(const char *const restrict raw_string);
 [[nodiscard]] struct string *struct_string_new_length(const size_t _len,
 													  const char character);
-inline void struct_string_del(struct string *this) {
-	free(this);
-}
+void struct_string_del(struct string *this);
 
-decl_single_word_type(struct string *, struct_string_p);
-
-darray_decl(struct_string_p);
-darray_decl_new(struct_string_p);
-darray_def_del(struct_string_p)
+DECL_SINGLE_WORD_TYPE(struct string *, struct_string_p);
+DARRAY_DECL(struct_string_p);
+DARRAY_DECL_NEW(struct_string_p);
+DARRAY_DECL_DEL(struct_string_p);
 
 struct sstring {
 	struct metadata hdr;

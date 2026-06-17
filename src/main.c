@@ -9,11 +9,6 @@
 #include <string.h>
 #include <windows.h>
 
-// We first test to make sure that this function isn't being used on a pointer type and is being used on an array type only,
-// If we have a array type `int arr[10]`, then `typeof_unqual(&arr) == int *(*)[10]`,
-// Since the type always has a numeric value, we can't write a definite type for the arrays to match,
-// However, for pointer type `int *arr`, then `typeof_unqual(&arr) == int ** == typeof(*arr) **`, hence we can match that value and catch pointers,
-// And if it is not a pointer, it must be an array type and non-array types will produce error as we are using subscript operation.
 #define lit_strncmp(buff, lit) _lit_strncmp(buff, lit, sizeof lit - 1)
 [[nodiscard]] static inline bool _lit_strncmp(const char *const restrict buff,
 											  const char *const restrict lit,
@@ -31,16 +26,10 @@ int main(const int argc, const char *const argv[const]) {
 		return 1;
 	}
 
-	darray(struct_string_p) *args = darray_new(struct_string_p, (size_t) argc - 1);
-
+	darray(struct_string_p) *args =
+		darray_new(struct_string_p, (size_t)argc - 1, struct_string_del);
+	// TODO: Function to append arguments.
 	for (size_t index = 0; index < len(args); ++index) {
-		const size_t curr_arg_len = strnlen_s(argv[index + 1], SIZE_MAX);
-		if (curr_arg_len == SIZE_MAX) {
-			// TODO: Handle errors here.
-			error();
-			return 1;
-		}
-
 		args->buff[index] = struct_string_new_value(argv[index + 1]);
 		if (args->buff[index] == nullptr) {
 			goto cleanup;
@@ -51,6 +40,7 @@ int main(const int argc, const char *const argv[const]) {
 	// `template_dir` is acting as a readable string only.
 	const struct string *template_dir = nullptr;
 	for (size_t index = 0; index < len(args); ++index) {
+		printf("Running index %zu\n", index);
 		if (lit_strncmp(args->buff[index]->buff, "--help") ||
 			lit_strncmp(args->buff[index]->buff, "-h")) {
 			// TODO: Generate the help menu.

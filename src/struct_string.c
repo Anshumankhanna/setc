@@ -40,13 +40,16 @@ struct_string_new_value(const char *const restrict raw_string) {
 		return new;
 	}
 
-	*ref_cap(new) = *ref_len(new) = len;
-	memset(new->buff, character, sizeof character * len(new));
+	*ref_cap(new) = len;
+	*ref_len(new) = 0;
 	new->buff[len(new)] = '\0';
 
 	return new;
 }
-extern inline void struct_string_del(struct string *this);
+void struct_string_del(struct string *this) {
+	printf("Removing something\n");
+	free(this);
+}
 
-darray_decl_del(struct_string_p);
-darray_def_new(struct_string_p)
+DARRAY_DEF_NEW(struct_string_p)
+DARRAY_DEF_DEL(struct_string_p)
