@@ -1,4 +1,5 @@
 #include "struct_string.h"
+#include "metadata.h"
 #include "struct_array.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -18,7 +19,7 @@ struct_string_new_value(const char *const restrict raw_string) {
 		return nullptr;
 	}
 
-	struct string *new = malloc(sizeof(struct string) +
+	struct string *const new = malloc(sizeof(struct string) +
 								sizeof *raw_string * (raw_string_len + 1));
 	if (new == nullptr) {
 		// TODO: Handle error.
@@ -33,7 +34,7 @@ struct_string_new_value(const char *const restrict raw_string) {
 }
 [[nodiscard]] struct string *struct_string_new_length(const size_t len,
 													  const char character) {
-	struct string *new =
+	struct string *const new =
 		malloc(sizeof(struct string) + sizeof character * (len + 1));
 	if (new == nullptr) {
 		// TODO: Handle error.
@@ -42,14 +43,15 @@ struct_string_new_value(const char *const restrict raw_string) {
 
 	*ref_cap(new) = len;
 	*ref_len(new) = 0;
+	memset(new->buff, 0, cap(new));
 	new->buff[len(new)] = '\0';
 
 	return new;
 }
-void struct_string_del(struct string *this) {
-	printf("Removing something\n");
+void struct_string_del(struct string *const this) {
 	free(this);
 }
 
 DARRAY_DEF_NEW(struct_string_p)
 DARRAY_DEF_DEL(struct_string_p)
+DARRAY_DEF_ADD(struct_string_p)

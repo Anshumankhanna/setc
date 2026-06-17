@@ -20,6 +20,7 @@ DECL_SINGLE_WORD_TYPE(struct string *, struct_string_p);
 DARRAY_DECL(struct_string_p);
 DARRAY_DECL_NEW(struct_string_p);
 DARRAY_DECL_DEL(struct_string_p);
+DARRAY_DECL_ADD(struct_string_p);
 
 struct sstring {
 	struct metadata hdr;
@@ -31,8 +32,8 @@ struct sstring {
 	}
 
 struct lstring {
-	struct metadata hdr;
-	const char *buff;
+	const struct metadata hdr;
+	const char *const buff;
 };
 #define lstring_new(_str)                                                      \
 	(struct lstring) {                                                         \
