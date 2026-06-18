@@ -22,6 +22,7 @@ DARRAY_DECL_NEW(struct_string_p);
 DARRAY_DECL_DEL(struct_string_p);
 DARRAY_DECL_ADD(struct_string_p);
 
+// Static string i.e. a string struct that has a static buffer i.e. `char[]`.
 struct sstring {
 	struct metadata hdr;
 	char *const buff;
@@ -30,7 +31,10 @@ struct sstring {
 	(struct sstring) {                                                         \
 		.hdr = {.cap = sizeof _str - 1, .len = 0}, .buff = _str                \
 	}
+// Macro takes an updater func that modifies the buffer and returns length.
+#define struct_sstring_update(_this, _updater, ...) (*ref_len(_this) = _updater(__VA_ARGS__))
 
+// Literal string i.e. a string struct that has a string literal buffer i.e. `const char *`.
 struct lstring {
 	const struct metadata hdr;
 	const char *const buff;

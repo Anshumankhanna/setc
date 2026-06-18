@@ -3,6 +3,7 @@
 #include "struct_string.h"
 #include <direct.h>
 #include <errno.h>
+#include <fileapi.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,8 +12,8 @@
 
 #define litncmp(buff, lit) _litncmp(buff, lit, sizeof lit - 1)
 [[nodiscard]] static inline bool _litncmp(const char *const restrict buff,
-											  const char *const restrict lit,
-											  const size_t lit_size) {
+										  const char *const restrict lit,
+										  const size_t lit_size) {
 	return strncmp(buff, lit, lit_size) == 0;
 }
 
@@ -29,8 +30,9 @@ int main(const int argc, const char *const argv[const]) {
 	darray(struct_string_p) *args =
 		darray_new(struct_string_p, (size_t)argc - 1, struct_string_del);
 	// TODO: Function to append arguments.
-	for (size_t index = 0; index < (size_t) argc - 1; ++index) {
-		darray(struct_string_p) *const result = darray_add(struct_string_p, args, struct_string_new_value(argv[index + 1]));
+	for (size_t index = 0; index < (size_t)argc - 1; ++index) {
+		darray(struct_string_p) *const result = darray_add(
+			struct_string_p, args, struct_string_new_value(argv[index + 1]));
 		if (result == nullptr) {
 			goto cleanup;
 		}
@@ -81,9 +83,9 @@ int main(const int argc, const char *const argv[const]) {
 	// our string type for future use.
 	char _abs_template_dir[_MAX_PATH] = "";
 	struct sstring abs_template_dir = string_new(_abs_template_dir);
-	if ((*ref_len(&abs_template_dir) =
-			 GetFullPathName(template_dir->buff, _MAX_PATH,
-							 abs_template_dir.buff, nullptr)) >= _MAX_PATH) {
+	if (struct_sstring_update(&abs_template_dir, GetFullPathName,
+							  template_dir->buff, _MAX_PATH,
+							  abs_template_dir.buff, nullptr) >= _MAX_PATH) {
 		// TODO: Error.
 		error();
 		goto cleanup;
