@@ -43,8 +43,8 @@ struct_string_new_value(const char *const restrict raw_string) {
 	}
 
 	*ref_cap(new) = len;
-	*ref_len(new) = 0;
-	memset(new->buff, 0, cap(new));
+	*ref_len(new) = len;
+	memset(new->buff, character, cap(new));
 	new->buff[len(new)] = '\0';
 
 	return new;

@@ -3,7 +3,6 @@
 #include "struct_string.h"
 #include <direct.h>
 #include <errno.h>
-#include <fileapi.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,8 +30,8 @@ int main(const int argc, const char *const argv[const]) {
 		darray_new(struct_string_p, (size_t)argc - 1, struct_string_del);
 	// TODO: Function to append arguments.
 	for (size_t index = 0; index < (size_t)argc - 1; ++index) {
-		darray(struct_string_p) *const result = darray_add(
-			struct_string_p, args, struct_string_new_value(argv[index + 1]));
+		darray(struct_string_p) *const result =
+			darray_add(struct_string_p, args, dstring_new(argv[index + 1]));
 		if (result == nullptr) {
 			goto cleanup;
 		}
