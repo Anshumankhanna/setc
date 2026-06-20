@@ -113,8 +113,6 @@ TARGET ::= bin/setc.exe
 ASM_DIR ::= asms
 ASMS ::= $(SRCS:$(SRC_DIR)/%.c=$(ASM_DIR)/%.S)
 
-ARGS ::= "-d ."
-
 # ------------
 # COMPILATION TARGETS
 # ------------

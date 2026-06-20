@@ -20,8 +20,8 @@ struct_string_new_value(const char *const restrict raw_string) {
 		return nullptr;
 	}
 
-	struct string *const new = malloc(sizeof(struct string) +
-								sizeof *raw_string * (raw_string_len + 1));
+	struct string *const new = malloc(
+		sizeof(struct string) + sizeof *raw_string * (raw_string_len + 1));
 	if (new == nullptr) {
 		// TODO: Handle error.
 		return new;

@@ -10,44 +10,38 @@
 #define DARRAY_DECL(TYPE)                                                      \
 	darray(TYPE) {                                                             \
 		struct metadata hdr;                                                   \
-		void (*del_buff)(TYPE);                                                     \
 		TYPE buff[];                                                           \
 	}
 
 #define DARRAY_DECL_NEW(TYPE)                                                  \
-	[[nodiscard]] darray(TYPE) * TYPE##_darray_new(const size_t len,           \
-												   const size_t elem_size,     \
-												   void (*const del_buff)(TYPE))
+	[[nodiscard]] darray(TYPE) *                                               \
+		TYPE##_darray_new(const size_t len, const size_t elem_size)
 #define DARRAY_DEF_NEW(TYPE)                                                   \
-	[[nodiscard]] darray(TYPE) * TYPE##_darray_new(const size_t len,           \
-												   const size_t elem_size,     \
-												   void (*const del_buff)(TYPE)) {  \
+	[[nodiscard]] darray(TYPE) *                                               \
+		TYPE##_darray_new(const size_t len, const size_t elem_size) {          \
 		darray(TYPE) *const new =                                              \
 			malloc(sizeof(darray(TYPE)) + elem_size * len);                    \
 		if (new == nullptr) {                                                  \
 			return new;                                                        \
 		}                                                                      \
                                                                                \
-		new->del_buff = del_buff;                                                        \
 		*ref_cap(new) = len;                                                   \
 		*ref_len(new) = 0;                                                     \
 		memset(new->buff, 0, cap(new));                                        \
                                                                                \
 		return new;                                                            \
 	}
-#define darray_new(TYPE, len, del_buff) TYPE##_darray_new(len, sizeof(TYPE), del_buff)
+#define darray_new(TYPE, len) TYPE##_darray_new(len, sizeof(TYPE))
 
 #define DARRAY_DECL_DEL(TYPE) void TYPE##_darray_del(darray(TYPE) *const this)
 #define DARRAY_DEF_DEL(TYPE)                                                   \
 	void TYPE##_darray_del(darray(TYPE) *const this) {                         \
-		if (this->del_buff != nullptr) {                                            \
-			for (size_t index = 0; index < len(this); ++index) {               \
-				this->del_buff(this->buff[index]);                                  \
-			}                                                                  \
+		for (size_t index = 0; index < len(this); ++index) {                   \
+			del(this->buff[index]);                                            \
 		}                                                                      \
-		free(this);                                                            \
+		free(this);                                                             \
 	}
-#define darray_del(TYPE, this) TYPE##_darray_del(this)
+#define darray_del(TYPE) TYPE##_darray_del
 
 #define DARRAY_DECL_ADD(TYPE)                                                  \
 	[[nodiscard]] darray(TYPE) *                                               \

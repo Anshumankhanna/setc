@@ -3,6 +3,7 @@
 #include "struct_string.h"
 #include <direct.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,28 +17,34 @@
 	return strncmp(buff, lit, lit_size) == 0;
 }
 
-static inline void error() {
-	printf("\x1B[31mSome error occurred\n\x1B[39m");
-}
+#define err(ERR, ...)                                                          \
+	do {                                                                       \
+		perror("\x1B[31m" ERR "\x1B[39m");                                     \
+		exit_status = errno == 0 ? 1 : errno;                                  \
+		goto cleanup;                                                          \
+	} while (0)
 
-int main(const int argc, const char *const argv[const]) {
+int main([[maybe_unused]] const int argc,
+		 [[maybe_unused]] const char *const argv[const]) {
+	constexpr size_t BUFF_SIZE = 4096;
+	int exit_status = 0;
+	darray(struct_string_p) *args = nullptr;
+
 	if (argc <= 1) {
-		printf("Require more arguments.\n");
-		return 1;
+		err("Require more arguments");
 	}
 
-	darray(struct_string_p) *args =
-		darray_new(struct_string_p, (size_t)argc - 1, struct_string_del);
+	args = darray_new(struct_string_p, (size_t)argc - 1);
 	// TODO: Function to append arguments.
 	for (size_t index = 0; index < (size_t)argc - 1; ++index) {
-		darray(struct_string_p) *const result =
+		darray(struct_string_p) *const res =
 			darray_add(struct_string_p, args, dstring_new(argv[index + 1]));
-		if (result == nullptr) {
-			goto cleanup;
+		if (res == nullptr) {
+			err("Couldn't allocate all arguments");
 		}
-		args = result;
+		args = res;
 	}
-
+	//
 	// This `const` qualifier won't let us free `template_dir` since
 	// `template_dir` is acting as a readable string only.
 	const struct string *template_dir = nullptr;
@@ -53,26 +60,27 @@ int main(const int argc, const char *const argv[const]) {
 			goto cleanup;
 		} else if (litncmp(args->buff[index]->buff, "-d")) {
 			if (index + 1 == len(args)) {
-				// TODO: Error here.
-				printf("1\n");
-				error();
-				goto cleanup;
+				err("\x1B[37m-d\x1B[39m has to be followed with a directory "
+					"name or '.'");
 			}
 
-			template_dir = args->buff[index + 1];
-			break;
+			++index;
+			// We are adding a default name.
+			if (litncmp(args->buff[index]->buff, ".")) {
+				printf("This ran\n");
+				del(args->buff[index]);
+				args->buff[index] = dstring_new("cproject");
+				if (args->buff[index] == nullptr) {
+					err("Couldn't change '.' to cproject");
+				}
+			}
+
+			template_dir = args->buff[index];
 		}
 	}
 	// Necessary to know for upcoming operations.
 	if (template_dir == nullptr) {
-		error();
-		goto cleanup;
-	}
-	if (memchr(template_dir->buff, '.', len(template_dir)) != nullptr) {
-		// TODO: Error here.
-		// The given name represents a file name not a directory name.
-		error();
-		goto cleanup;
+		err("Invalid arguments provided");
 	}
 
 	// TODO: We are limited to _MAX_PATH characters, how to escape this
@@ -80,29 +88,31 @@ int main(const int argc, const char *const argv[const]) {
 
 	// We are going to have `_` prefixed c string elements to convert them to
 	// our string type for future use.
-	char _abs_template_dir[_MAX_PATH] = "";
+	char _abs_template_dir[BUFF_SIZE] = "";
 	struct sstring abs_template_dir = string_new(_abs_template_dir);
 	if (struct_sstring_update(&abs_template_dir, GetFullPathName,
-							  template_dir->buff, _MAX_PATH,
-							  abs_template_dir.buff, nullptr) >= _MAX_PATH) {
-		// TODO: Error.
-		error();
-		goto cleanup;
+							  template_dir->buff, BUFF_SIZE,
+							  abs_template_dir.buff, nullptr) >= BUFF_SIZE) {
+		err("Buffer allocated to store directory path is too small");
 	}
 
 	switch (_mkdir(abs_template_dir.buff)) {
-		case EEXIST:
-		case ENOENT: {
-			// TODO: Error here.
-			error();
-			goto cleanup;
+		case EEXIST: {
+			err("Directory already exists");
 		}
-		default:
+		case ENOENT: {
+			err("Directory path can't be found, some parent folders may be "
+				"missing");
+		}
+		default: {
+			printf("Directory created successfully at %.*s\n",
+				   (int)len(&abs_template_dir), abs_template_dir.buff);
+		}
 	}
 
 cleanup:
 	// Cleanup.
-	darray_del(struct_string_p, args);
+	del(args);
 
-	return 0;
+	return exit_status;
 }

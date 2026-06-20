@@ -18,7 +18,8 @@ struct_string_new_value(const char *const restrict raw_string);
 	_Generic(arg1,                                                             \
 		size_t: struct_string_new_length,                                      \
 		char *: struct_string_new_value,                                       \
-		const char *: struct_string_new_value)(arg1 __VA_OPT__(, ) __VA_ARGS__)
+		const char *: struct_string_new_value)(arg1 __VA_OPT__(, )             \
+												   __VA_ARGS__)
 void struct_string_del(struct string *this);
 
 DECL_SINGLE_WORD_TYPE(struct string *, struct_string_p);
@@ -54,6 +55,6 @@ struct_lstring_new(const size_t cap, const char *const literal_string) {
 }
 
 #define string_new(_str)                                                       \
-	_Generic(_str,                                                             \
-		char *: struct_sstring_new,                                            \
-		const char *: struct_lstring_new)(sizeof _str - 1, _str)
+	_Generic(&_str,                                                            \
+		const char **: struct_lstring_new,                                     \
+		default: struct_sstring_new)(sizeof _str - 1, _str)
