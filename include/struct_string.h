@@ -14,15 +14,11 @@ struct string {
 struct_string_new_value(const char *const restrict raw_string);
 [[nodiscard]] struct string *struct_string_new_length(const size_t _len,
 													  const char character);
-#define PICK(a1, ...) a1
 #define dstring_new(arg1, ...)                                                 \
 	_Generic(arg1,                                                             \
-		size_t: struct_string_new_length(                                      \
-				 (size_t)(const void *)arg1,                                   \
-				 PICK(__VA_ARGS__ __VA_OPT__(, ) '\0')),                       \
-		char *: struct_string_new_value((const char *)(const void *)arg1),     \
-		const char *: struct_string_new_value(                                 \
-				 (const char *)(const void *)arg1))
+		size_t: struct_string_new_length,                                      \
+		char *: struct_string_new_value,                                       \
+		const char *: struct_string_new_value)(arg1 __VA_OPT__(, ) __VA_ARGS__)
 void struct_string_del(struct string *this);
 
 DECL_SINGLE_WORD_TYPE(struct string *, struct_string_p);
