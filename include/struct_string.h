@@ -38,9 +38,6 @@ struct_sstring_new(const size_t cap, char static_string[const cap]) {
 	return (struct sstring){.hdr = {.cap = cap, .len = 0},
 							.buff = static_string};
 }
-// Macro takes an updater func that modifies the buffer and returns length.
-#define struct_sstring_update(_this, _updater, ...)                            \
-	(*ref_len(_this) = _updater(__VA_ARGS__))
 
 // Literal string i.e. a string struct that has a string literal buffer i.e.
 // `const char *`.

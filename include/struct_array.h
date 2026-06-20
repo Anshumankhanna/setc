@@ -36,10 +36,14 @@
 #define DARRAY_DECL_DEL(TYPE) void TYPE##_darray_del(darray(TYPE) *const this)
 #define DARRAY_DEF_DEL(TYPE)                                                   \
 	void TYPE##_darray_del(darray(TYPE) *const this) {                         \
+		if (this == nullptr) {                                                 \
+			return;                                                            \
+		}                                                                      \
+                                                                               \
 		for (size_t index = 0; index < len(this); ++index) {                   \
 			del(this->buff[index]);                                            \
 		}                                                                      \
-		free(this);                                                             \
+		free(this);                                                            \
 	}
 #define darray_del(TYPE) TYPE##_darray_del
 

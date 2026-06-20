@@ -118,7 +118,6 @@ ASMS ::= $(SRCS:$(SRC_DIR)/%.c=$(ASM_DIR)/%.S)
 # ------------
 .DELETE_ON_ERROR :
 .ONESHELL :
-.PHONY : all asm clangd clean cleanasm mostlyclean run
 .POSIX :
 # .SUFFIXES :
 
@@ -126,6 +125,7 @@ vpath %.c src
 vpath %.h include
 
 # Default
+.PHONY : all
 all : $(TARGET)
 
 $(BUILD_DIR)/%.o : %.c | $(BUILD_DIR)
@@ -135,10 +135,12 @@ $(TARGET) : $(OBJS) | $(BIN_DIR)
 	$(CC) $(LDFLAGS) -o $@ $^ $(LOADLIBES) $(LDLIBS)
 
 # Running the target
+.PHONY : run
 run : $(TARGET)
 	$< $(ARGS)
 
 # If we want to check the assembly output of a file.
+.PHONY : asm
 asm : $(ASMS)
 
 $(ASM_DIR)/%.S : %.c %.h | $(ASM_DIR)
@@ -148,16 +150,23 @@ $(ASM_DIR)/%.S : %.c %.h | $(ASM_DIR)
 $(ASM_DIR) $(BIN_DIR) $(BUILD_DIR) :
 	-mkdir $@
 
+.PHONY : stat
+stat:
+	git status -sb --ignored
+
 # Cleanup
 RM_FLAGS ::= -I
 CLEAN ::= -rm -r $(RM_FLAGS)
 
+.PHONY : clean
 clean :
 	$(CLEAN) $(BIN_DIR) $(BUILD_DIR)
 
+.PHONY : mostlyclean
 mostlyclean :
 	$(CLEAN) $(BIN_DIR)
 
+.PHONY : cleanasm
 # Clean asm outputs separately, not part of general compilation.
 cleanasm :
 	$(CLEAN) $(ASM_DIR)

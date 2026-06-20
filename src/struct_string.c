@@ -56,3 +56,7 @@ void struct_string_del(struct string *const this) {
 DARRAY_DEF_NEW(struct_string_p)
 DARRAY_DEF_DEL(struct_string_p)
 DARRAY_DEF_ADD(struct_string_p)
+
+[[nodiscard]] extern inline struct sstring struct_sstring_new(const size_t cap, char static_string[const cap]);
+
+[[nodiscard]] extern inline struct lstring struct_lstring_new(const size_t cap, const char *const literal_string);
