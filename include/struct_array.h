@@ -25,8 +25,8 @@
 			return new;                                                        \
 		}                                                                      \
                                                                                \
-		*ref_cap(new) = len;                                                   \
-		*ref_len(new) = 0;                                                     \
+		ref_cap(new) = len;                                                    \
+		ref_len(new) = 0;                                                      \
 		memset(new->buff, 0, cap(new));                                        \
                                                                                \
 		return new;                                                            \
@@ -53,6 +53,10 @@
 #define DARRAY_DEF_ADD(TYPE)                                                   \
 	[[nodiscard]] darray(TYPE) *                                               \
 		TYPE##_darray_add(darray(TYPE) * this, TYPE elem) {                    \
+		if (this == nullptr) {                                                 \
+			return nullptr;                                                    \
+		}                                                                      \
+                                                                               \
 		if (cap(this) < len(this) + 1) {                                       \
 			const size_t new_cap = cap(this) >= SIZE_MAX >> 1                  \
 									   ? SIZE_MAX                              \
@@ -64,10 +68,10 @@
 			}                                                                  \
                                                                                \
 			this = new;                                                        \
-			*ref_cap(this) = new_cap;                                          \
+			ref_cap(this) = new_cap;                                           \
 		}                                                                      \
                                                                                \
-		this->buff[(*ref_len(this))++] = elem;                                 \
+		this->buff[(ref_len(this))++] = elem;                                  \
                                                                                \
 		return this;                                                           \
 	}

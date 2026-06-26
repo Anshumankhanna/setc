@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "metadata.h"
 #include "struct_array.h"
 #include "struct_string.h"
@@ -17,14 +19,67 @@
 
 #define err(ERR)                                                               \
 	do {                                                                       \
-		perror("\x1B[31m" ERR "\x1B[39m");                                     \
+		printf("\x1B[31m" ERR "\n");                                           \
+		if (errno != 0) {                                                      \
+			perror(nullptr);                                                   \
+		}                                                                      \
+		printf("\x1B[39m");                                                    \
+                                                                               \
 		exit_status = errno == 0 ? 1 : errno;                                  \
 		goto cleanup;                                                          \
 	} while (0)
 
+static inline bool create_dir(const struct string *const restrict path) {
+	switch (_mkdir(path->buff)) {
+		case -1: {
+			return false;
+			// 	switch (errno) {
+			// 		case EEXIST: {
+			// 			err("Directory already exists");
+			// 		}
+			// 		case ENOENT: {
+			// 			err("Invalid directory path");
+			// 		}
+			// 		default: {
+			// 			err("Unknown error in creating directory");
+			// 		}
+			// 	}
+		}
+		case 0: {
+			printf("Directory created successfully at %.*s\n", (int)len(path),
+				   path->buff);
+			break;
+		}
+		default: {
+			unreachable();
+		}
+	}
+
+	return true;
+}
+static inline bool create_file(const struct string *const restrict path,
+							   const struct string *const restrict data) {
+	FILE *new = fopen(path->buff, "wx");
+	if (new == nullptr) {
+		return false;
+	}
+
+	const size_t written_chars =
+		fwrite(data->buff, sizeof *data->buff, len(data), new);
+	if (written_chars < len(data) || written_chars == 0) {
+		return false;
+	}
+
+	return true;
+}
+
 int main(const int argc, const char *const argv[const restrict]) {
+	constexpr size_t BUFF_SIZE = 4096;
+
 	int exit_status = 0;
 	darray(struct_string_p) *args = nullptr;
+	struct string *src = nullptr;
+	struct string *include = nullptr;
 
 	if (argc <= 1) {
 		err("Require more arguments");
@@ -88,12 +143,11 @@ int main(const int argc, const char *const argv[const restrict]) {
 		err("Invalid arguments provided");
 	}
 
-	constexpr size_t BUFF_SIZE = 4096;
 	// We are going to have `_` prefixed c string elements to convert them to
 	// our string type for future use.
 	char _abs_template_dir[BUFF_SIZE] = "";
 	struct sstring abs_template_dir = string_new(_abs_template_dir);
-	*ref_len(&abs_template_dir) = GetFullPathName(
+	ref_len(&abs_template_dir) = GetFullPathName(
 		template_dir->buff, BUFF_SIZE, abs_template_dir.buff, nullptr);
 	if (len(&abs_template_dir) >= BUFF_SIZE) {
 		err("Buffer allocated to store directory path is too small");
@@ -126,8 +180,89 @@ int main(const int argc, const char *const argv[const restrict]) {
 		}
 	}
 
+	const struct lstring src_literal = string_new("/src");
+	src = struct_string_cat((const struct string *)&abs_template_dir,
+							(const struct string *)&src_literal);
+	if (src != nullptr) {
+		switch (_mkdir(src->buff)) {
+			case -1: {
+				switch (errno) {
+					case EEXIST: {
+						err("Directory already exists");
+					}
+					case ENOENT: {
+						err("Invalid directory path");
+					}
+					default: {
+						err("Unknown error in creating directory");
+					}
+				}
+			}
+			case 0: {
+				printf("Directory created successfully at %.*s\n",
+					   (int)len(src), src->buff);
+				break;
+			}
+			default: {
+				unreachable();
+			}
+		}
+	}
+
+	const struct lstring include_literal = string_new("/include");
+	include = struct_string_cat((const struct string *)&abs_template_dir,
+								(const struct string *)&include_literal);
+	if (include != nullptr) {
+		switch (_mkdir(include->buff)) {
+			case -1: {
+				switch (errno) {
+					case EEXIST: {
+						err("Directory already exists");
+					}
+					case ENOENT: {
+						err("Invalid directory path");
+					}
+					default: {
+						err("Unknown error in creating directory");
+					}
+				}
+			}
+			case 0: {
+				printf("Directory created successfully at %.*s\n",
+					   (int)len(include), include->buff);
+				break;
+			}
+			default: {
+				unreachable();
+			}
+		}
+	}
+
+	constexpr char _gitignore[] = {
+#embed "../.gitignore" suffix(, )
+		'\0'};
+	[[maybe_unused]] const struct lstring gitignore = string_new(_gitignore);
+
+	constexpr char _makefile[] = {
+#embed "../makefile" suffix(, )
+		'\0'};
+	[[maybe_unused]] const struct lstring makefile = string_new(_makefile);
+
+	constexpr char _clangd[] = {
+#embed "../.clangd" suffix(, )
+		'\0'};
+	[[maybe_unused]] const struct lstring clangd = string_new(_clangd);
+
+	constexpr char _clang_format[] = {
+#embed "../.clang-format" suffix(, )
+		'\0'};
+	[[maybe_unused]] const struct lstring clang_format =
+		string_new(_clang_format);
+
 cleanup:
 	// Cleanup.
+	del(include);
+	del(src);
 	del(args);
 
 	return exit_status;

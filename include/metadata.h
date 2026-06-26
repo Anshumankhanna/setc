@@ -25,10 +25,10 @@ struct metadata {
 
 DEFINE_PRIVATE_FIELD_FUNCS(cap)
 #define cap(ptr) _cap(const_metadata_const_cast(ptr))
-#define ref_cap(ptr) _ref_cap(metadata_const_cast(ptr))
+#define ref_cap(ptr) *_ref_cap(metadata_const_cast(ptr))
 
 DEFINE_PRIVATE_FIELD_FUNCS(len)
 #define len(ptr) _len(const_metadata_const_cast(ptr))
-#define ref_len(ptr) _ref_len(metadata_const_cast(ptr))
+#define ref_len(ptr) *_ref_len(metadata_const_cast(ptr))
 
 #endif
