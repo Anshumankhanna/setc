@@ -1,8 +1,10 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-#include <limits.h>
 #include <string.h>
+
+#define i(N) _BitInt(N)
+#define u(N) unsigned i(N)
 
 #ifndef unreachable
 #define unreachable() __builtin_unreachable()

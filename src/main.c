@@ -23,14 +23,14 @@
 		}                                                                      \
 		printf("\x1B[39m");                                                    \
                                                                                \
-		exit_status = errno == 0 ? 1 : (_BitInt(8))errno;                      \
+		exit_status = errno == 0 ? 1wb : (u(8))errno;                      \
 		goto cleanup;                                                          \
 	} while (0)
 
-static inline _BitInt(8) create_dir(const struct string *const restrict path) {
+static inline u(8) create_dir(const struct string *const restrict path) {
 	switch (_mkdir((const char *)path->buff)) {
 		case -1: {
-			return (_BitInt(8))errno;
+			return (u(8))errno;
 			// switch (errno) {
 			// 	case EEXIST: {
 			// 		err("Directory already exists");
@@ -46,7 +46,7 @@ static inline _BitInt(8) create_dir(const struct string *const restrict path) {
 		case 0: {
 			// printf("Directory created successfully at %.*s\n",
 			// (int)len(path), 	   path->buff);
-			return 0;
+			return 0uwb;
 		}
 		default: {
 			unreachable();
@@ -70,8 +70,8 @@ static inline bool create_file(const struct string *const restrict path,
 }
 
 int main(const int argc, const char *const *const argv) {
-	constexpr size_t BUFF_SIZE = 4096;
-	_BitInt(8) exit_status = 0;
+	constexpr size_t BUFF_SIZE = (size_t) 4096;
+	u(8) exit_status = 0uwb;
 
 	darray(struct_string_p) *args = nullptr;
 	struct string *src = nullptr;
