@@ -1,20 +1,23 @@
 #include "struct_string.h"
 #include "metadata.h"
 #include "struct_array.h"
+#include "utilities.h"
+
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 [[nodiscard]] struct string *
-struct_string_new_char_arr(const char *const restrict raw_string) {
+struct_string_new_char_arr(const char8_t *const restrict raw_string) {
 	if (raw_string == nullptr) {
 		// TODO: Handle error.
 		return nullptr;
 	}
 
-	const size_t raw_string_len = strnlen(raw_string, SIZE_MAX);
+	const size_t raw_string_len = strnlen((const char *)raw_string, SIZE_MAX);
 	if (raw_string_len == SIZE_MAX) {
 		// TODO: Handle error.
 		return nullptr;
@@ -34,7 +37,7 @@ struct_string_new_char_arr(const char *const restrict raw_string) {
 	return new;
 }
 [[nodiscard]] struct string *struct_string_new_length(const size_t len,
-													  const char character) {
+													  const char8_t character) {
 	struct string *const new =
 		malloc(sizeof(struct string) + sizeof character * (len + 1));
 	if (new == nullptr) {
@@ -81,8 +84,9 @@ struct_string_cat(const struct string *const restrict first,
 		return dstring_new(first);
 	}
 
-	struct string *const new = malloc(
-		sizeof(struct string) + sizeof(char) * (len(first) + len(second) + 1));
+	struct string *const new =
+		malloc(sizeof(struct string) +
+			   sizeof(char8_t) * (len(first) + len(second) + 1));
 	if (new == nullptr) {
 		return nullptr;
 	}
@@ -100,7 +104,7 @@ DARRAY_DEF_DEL(struct_string_p)
 DARRAY_DEF_ADD(struct_string_p)
 
 [[nodiscard]] extern inline struct sstring
-struct_sstring_new(const size_t cap, char static_string[const cap]);
+struct_sstring_new(const size_t cap, char8_t static_string[const cap]);
 
 [[nodiscard]] extern inline struct lstring
-struct_lstring_new(const size_t cap, const char *const literal_string);
+struct_lstring_new(const size_t cap, const char8_t *const literal_string);

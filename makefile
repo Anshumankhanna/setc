@@ -17,6 +17,7 @@ DIALECT ::= -std=$(STD)\
 	-fstrict-flex-arrays
 
 ERRORS ::= -pedantic-errors\
+	-Wall\
 	-Walloc-zero\
 	-Warith-conversion\
 	-Warray-bounds=2\

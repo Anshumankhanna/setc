@@ -1,9 +1,6 @@
 #ifndef ARRAY_H
 #define ARRAY_H
 
-#include "metadata.h"
-#include "utilities.h"
-
 #define DECL_SINGLE_WORD_TYPE(TYPE, NAME) typedef TYPE NAME
 
 #define darray(TYPE) struct TYPE##_darray
@@ -60,7 +57,7 @@
 		if (cap(this) < len(this) + 1) {                                       \
 			const size_t new_cap = cap(this) >= SIZE_MAX >> 1                  \
 									   ? SIZE_MAX                              \
-									   : max(1ull, cap(this)) * 2ull;          \
+									   : max((size_t) 1, cap(this)) * (size_t) 2;          \
 			darray(TYPE) *const new =                                          \
 				realloc(this, sizeof(darray(TYPE)) + new_cap);                 \
 			if (new == nullptr) {                                              \
