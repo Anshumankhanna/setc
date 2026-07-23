@@ -1,6 +1,7 @@
 #include "struct_string.h"
 #include "metadata.h"
-#include "struct_array.h"
+#include "metadata_def.h"
+#include "array_def.h"
 #include "utilities.h"
 
 #include <stdarg.h>
@@ -10,8 +11,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-[[nodiscard]] struct string *
-struct_string_new_char_arr(const char8_t *const restrict raw_string) {
+struct dstring {
+	struct metadata hdr;
+	char8_t buff[];
+};
+
+[[nodiscard]] struct dstring *
+struct_dstring_new_char_arr(const char8_t *const restrict raw_string) {
 	if (raw_string == nullptr) {
 		// TODO: Handle error.
 		return nullptr;
@@ -23,8 +29,8 @@ struct_string_new_char_arr(const char8_t *const restrict raw_string) {
 		return nullptr;
 	}
 
-	struct string *const new = malloc(
-		sizeof(struct string) + sizeof *raw_string * (raw_string_len + 1));
+	struct dstring *const new = malloc(
+		sizeof(struct dstring) + sizeof *raw_string * (raw_string_len + 1));
 	if (new == nullptr) {
 		// TODO: Handle error.
 		return new;
@@ -36,10 +42,10 @@ struct_string_new_char_arr(const char8_t *const restrict raw_string) {
 
 	return new;
 }
-[[nodiscard]] struct string *struct_string_new_length(const size_t len,
-													  const char8_t character) {
-	struct string *const new =
-		malloc(sizeof(struct string) + sizeof character * (len + 1));
+[[nodiscard]] struct dstring *
+struct_dstring_new_length(const size_t len, const char8_t character) {
+	struct dstring *const new =
+		malloc(sizeof(struct dstring) + sizeof character * (len + 1));
 	if (new == nullptr) {
 		// TODO: Handle error.
 		return new;
@@ -51,13 +57,13 @@ struct_string_new_char_arr(const char8_t *const restrict raw_string) {
 
 	return new;
 }
-[[nodiscard]] struct string *
-struct_string_new_string(const struct string *const restrict str) {
+[[nodiscard]] struct dstring *
+struct_dstring_new_string(const struct dstring *const restrict str) {
 	if (str == nullptr) {
 		return nullptr;
 	}
 
-	struct string *const new =
+	struct dstring *const new =
 		malloc(sizeof *str + sizeof *str->buff * (len(str) + 1));
 	if (new == nullptr) {
 		return nullptr;
@@ -70,13 +76,13 @@ struct_string_new_string(const struct string *const restrict str) {
 	return new;
 }
 
-void struct_string_del(struct string *const this) {
+void struct_dstring_del(struct dstring *const this) {
 	free(this);
 }
 
-[[nodiscard]] struct string *
-struct_string_cat(const struct string *const restrict first,
-				  const struct string *const restrict second) {
+[[nodiscard]] struct dstring *
+struct_dstring_cat(const struct dstring *const restrict first,
+				   const struct dstring *const restrict second) {
 	if (first == nullptr) {
 		return dstring_new(second);
 	}
@@ -84,8 +90,8 @@ struct_string_cat(const struct string *const restrict first,
 		return dstring_new(first);
 	}
 
-	struct string *const new =
-		malloc(sizeof(struct string) +
+	struct dstring *const new =
+		malloc(sizeof(struct dstring) +
 			   sizeof(char8_t) * (len(first) + len(second) + 1));
 	if (new == nullptr) {
 		return nullptr;
@@ -93,16 +99,20 @@ struct_string_cat(const struct string *const restrict first,
 
 	ref_cap(new) = ref_len(new) = len(first) + len(second);
 	memcpy(new->buff, first, len(first));
-	memcpy(new->buff, second, len(second));
+	memcpy(new->buff + len(first), second, len(second));
 	new->buff[len(new)] = '\0';
 
 	return new;
 }
 
-DARRAY_DEF_NEW(struct_string_p)
-DARRAY_DEF_DEL(struct_string_p)
-DARRAY_DEF_ADD(struct_string_p)
+DARRAY_DEF_NEW(struct_dstring_p)
+DARRAY_DEF_DEL(struct_dstring_p)
+DARRAY_DEF_ADD(struct_dstring_p)
 
+struct sstring {
+	struct metadata hdr;
+	char8_t *const buff;
+};
 [[nodiscard]] extern inline struct sstring
 struct_sstring_new(const size_t cap, char8_t static_string[const cap]);
 

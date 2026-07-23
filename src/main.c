@@ -23,79 +23,91 @@
 		}                                                                      \
 		printf("\x1B[39m");                                                    \
                                                                                \
-		exit_status = errno == 0 ? 1wb : (u(8))errno;                      \
+		exit_status = errno == 0 ? 1wb : (u(8))errno;                          \
 		goto cleanup;                                                          \
 	} while (0)
 
-static inline u(8) create_dir(const struct string *const restrict path) {
-	switch (_mkdir((const char *)path->buff)) {
+static enum {
+	CRDIR_EXIST = EEXIST,		 // Directory exists
+	CRDIR_INVALID_PATH = ENOENT, // Invalid path
+	CRDIR_ERROR = -1,			 // Some error
+	CRDIR_SUCCESS = 0			 // Success
+} _create_dir(const struct string path) {
+	errno = 0;
+
+	const char *buff = nullptr;
+	switch (path.type) {
+		case TAG_DSTRING: {
+			buff = (const char *)path.val.dstr->buff;
+			break;
+		}
+		case TAG_SSTRING: {
+			buff = (const char *)path.val.sstr->buff;
+			break;
+		}
+		case TAG_LSTRING: {
+			buff = (const char *)path.val.lstr->buff;
+			break;
+		}
+		default: unreachable();
+	}
+
+	switch (_mkdir(buff)) {
 		case -1: {
-			return (u(8))errno;
-			// switch (errno) {
-			// 	case EEXIST: {
-			// 		err("Directory already exists");
-			// 	}
-			// 	case ENOENT: {
-			// 		err("Invalid directory path");
-			// 	}
-			// 	default: {
-			// 		err("Unknown error in creating directory");
-			// 	}
-			// }
+			switch (errno) {
+				case EEXIST: return CRDIR_EXIST;
+				case ENOENT: return CRDIR_INVALID_PATH;
+				default: return CRDIR_ERROR;
+			}
 		}
-		case 0: {
-			// printf("Directory created successfully at %.*s\n",
-			// (int)len(path), 	   path->buff);
-			return 0uwb;
-		}
-		default: {
-			unreachable();
-		}
+		case 0: return CRDIR_SUCCESS;
+		default: unreachable();
 	}
 }
-static inline bool create_file(const struct string *const restrict path,
-							   const struct string *const restrict data) {
-	FILE *new = fopen((const char *)path->buff, "wx");
-	if (new == nullptr) {
-		return false;
-	}
+#define create_dir(_str) _create_dir(string(_str))
 
-	const size_t written_chars =
-		fwrite(data->buff, sizeof *data->buff, len(data), new);
-	if (written_chars < len(data) || written_chars == 0) {
-		return false;
-	}
-
-	return true;
-}
+// static inline bool create_file(const struct string *const restrict path,
+// 							   const struct string *const restrict data) {
+// 	FILE *new = fopen((const char *)path->buff, "wx");
+// 	if (new == nullptr) {
+// 		return false;
+// 	}
+//
+// 	const size_t written_chars =
+// 		fwrite(data->buff, sizeof *data->buff, len(data), new);
+// 	if (written_chars < len(data) || written_chars == 0) {
+// 		return false;
+// 	}
+//
+// 	return true;
+// }
 
 int main(const int argc, const char *const *const argv) {
-	constexpr size_t BUFF_SIZE = (size_t) 4096;
+	constexpr size_t BUFF_SIZE = (size_t)4096;
 	u(8) exit_status = 0uwb;
 
-	darray(struct_string_p) *args = nullptr;
-	struct string *src = nullptr;
-	struct string *include = nullptr;
+	darray(struct_dstring_p) *args = nullptr;
+	struct dstring *src = nullptr;
+	struct dstring *include = nullptr;
 
 	if (argc <= 1) {
 		err("Require more arguments");
 	}
 
-	args = darray_new(struct_string_p, (size_t)argc - 1);
-	// TODO: Function to append arguments.
+	args = darray_new(struct_dstring_p, (size_t)argc - 1);
 	for (size_t index = 0; index < (size_t)argc - 1; ++index) {
-		darray(struct_string_p) *const res =
-			darray_add(struct_string_p, args,
+		darray(struct_dstring_p) *const res =
+			darray_add(struct_dstring_p, args,
 					   dstring_new((const char8_t *)argv[index + 1]));
 		if (res == nullptr) {
 			err("Couldn't allocate all arguments");
 		}
 		args = res;
 	}
-	//
+
 	// This `const` qualifier won't let us free `template_dir` since
 	// `template_dir` is acting as a readable string only.
-	const struct string *template_dir = nullptr;
+	const struct dstring *template_dir = nullptr;
 	for (size_t index = 0; index < len(args); ++index) {
 		if (ncmp(args->buff[index]->buff, u8"--help", sizeof "--help") ||
 			ncmp(args->buff[index]->buff, u8"-h", sizeof "-h")) {
@@ -154,109 +166,38 @@ int main(const int argc, const char *const *const argv) {
 		err();
 	}
 
-	switch (_mkdir((const char *)abs_template_dir.buff)) {
-		case -1: {
-			switch (errno) {
-				case EEXIST: {
-					err("Directory already exists");
-				}
-				case ENOENT: {
-					err("Invalid directory path");
-				}
-				default: {
-					err("Unknown error in creating directory");
-				}
-			}
-		}
-		case 0: {
-			printf("Directory created successfully at %.*s\n",
-				   (int)len(&abs_template_dir), abs_template_dir.buff);
+	switch (create_dir(&abs_template_dir)) {
+		case CRDIR_EXIST:
+		case CRDIR_INVALID_PATH:
+		case CRDIR_ERROR: goto cleanup;
+		case CRDIR_SUCCESS: {
+			printf("Created template directory\n");
 			break;
 		}
-		default: {
-			unreachable();
-		}
+		default: unreachable();
 	}
 
-	const struct lstring src_literal = string_new(u8"/src");
-	src = struct_string_cat((const struct string *)&abs_template_dir,
-							(const struct string *)&src_literal);
-	if (src != nullptr) {
-		switch (_mkdir((const char *)src->buff)) {
-			case -1: {
-				switch (errno) {
-					case EEXIST: {
-						err("Directory already exists");
-					}
-					case ENOENT: {
-						err("Invalid directory path");
-					}
-					default: {
-						err("Unknown error in creating directory");
-					}
-				}
-			}
-			case 0: {
-				printf("Directory created successfully at %.*s\n",
-					   (int)len(src), src->buff);
-				break;
-			}
-			default: {
-				unreachable();
-			}
-		}
-	}
-
-	const struct lstring include_literal = string_new(u8"/include");
-	include = struct_string_cat((const struct string *)&abs_template_dir,
-								(const struct string *)&include_literal);
-	if (include != nullptr) {
-		switch (_mkdir((const char *)include->buff)) {
-			case -1: {
-				switch (errno) {
-					case EEXIST: {
-						err("Directory already exists");
-					}
-					case ENOENT: {
-						err("Invalid directory path");
-					}
-					default: {
-						err("Unknown error in creating directory");
-					}
-				}
-			}
-			case 0: {
-				printf("Directory created successfully at %.*s\n",
-					   (int)len(include), include->buff);
-				break;
-			}
-			default: {
-				unreachable();
-			}
-		}
-	}
-
-	constexpr char8_t _gitignore[] = {
-#embed "../.gitignore" suffix(, )
-		'\0'};
-	[[maybe_unused]] const struct lstring gitignore = string_new(_gitignore);
-
-	constexpr char8_t _makefile[] = {
-#embed "../makefile" suffix(, )
-		'\0'};
-	[[maybe_unused]] const struct lstring makefile = string_new(_makefile);
-
-	constexpr char8_t _clangd[] = {
-#embed "../.clangd" suffix(, )
-		'\0'};
-	[[maybe_unused]] const struct lstring clangd = string_new(_clangd);
-
-	constexpr char8_t _clang_format[] = {
-#embed "../.clang-format" suffix(, )
-		'\0'};
-	[[maybe_unused]] const struct lstring clang_format =
-		string_new(_clang_format);
-
+// 	constexpr char8_t _gitignore[] = {
+// #embed "../.gitignore" suffix(, )
+// 		'\0'};
+// 	[[maybe_unused]] const struct lstring gitignore = string_new(_gitignore);
+//
+// 	constexpr char8_t _makefile[] = {
+// #embed "../makefile" suffix(, )
+// 		'\0'};
+// 	[[maybe_unused]] const struct lstring makefile = string_new(_makefile);
+//
+// 	constexpr char8_t _clangd[] = {
+// #embed "../.clangd" suffix(, )
+// 		'\0'};
+// 	[[maybe_unused]] const struct lstring clangd = string_new(_clangd);
+//
+// 	constexpr char8_t _clang_format[] = {
+// #embed "../.clang-format" suffix(, )
+// 		'\0'};
+// 	[[maybe_unused]] const struct lstring clang_format =
+// 		string_new(_clang_format);
+//
 cleanup:
 	// Cleanup.
 	del(include);

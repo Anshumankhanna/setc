@@ -2,8 +2,9 @@ CompileFlags:
     Add:
         - -std=c23
         - -I../include
-        - -Wno-unknown-warning-option
+        - -ferror-limit=0
         - -pedantic-errors
+        - -Wno-unknown-attributes
         - -Wall
         - -Walloc-zero
         - -Warith-conversion
@@ -68,6 +69,9 @@ CompileFlags:
         - -Wvector-operation-performance
         - -Wwrite-strings
         - -Wzero-as-null-pointer-constant
+    Remove:
+        - -Wlogical-op-parentheses
+        - -Wunknown-warning-option
     Compiler: gcc
 ---
 If:

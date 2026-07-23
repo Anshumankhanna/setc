@@ -30,8 +30,8 @@ DEF_MAX(size_t)
 // DEL FUNCTIONS
 #define del(_ptr)                                                              \
 	_Generic(*_ptr,                                                            \
-		struct string: struct_string_del,                                      \
-		darray(struct_string_p): darray_del(struct_string_p),                  \
+		struct dstring: struct_dstring_del,                                      \
+		darray(struct_dstring_p): darray_del(struct_dstring_p),                  \
 		default: free)(_ptr)
 
 // STRINGS (char to char8_t)
