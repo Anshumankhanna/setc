@@ -4,6 +4,7 @@
 #include "struct_array.h"
 #include "struct_string.h"
 #include "utilities.h"
+#include "string.h"
 
 #include <direct.h>
 #include <errno.h>

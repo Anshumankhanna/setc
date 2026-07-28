@@ -152,8 +152,12 @@ $(ASM_DIR) $(BIN_DIR) $(BUILD_DIR) :
 	-mkdir $@
 
 .PHONY : stat
-stat:
+stat :
 	git status -sb --ignored
+
+.PHONY : new
+new :
+	./scripts/new ${ARGS}
 
 # Cleanup
 RM_FLAGS ::= -I

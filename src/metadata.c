@@ -1,18 +1,9 @@
 #include "metadata.h"
-#include "metadata_def.h"
 
-[[nodiscard, unsequenced]] size_t
-_cap(const struct metadata *const restrict hdr) {
-	return hdr->cap;
-}
-[[nodiscard, unsequenced]] size_t
-_len(const struct metadata *const restrict hdr) {
-	return hdr->len;
-}
-[[nodiscard]] size_t *_ref_cap(struct metadata *const restrict hdr) {
-	return &hdr->cap;
-}
+[[nodiscard, unsequenced]] size_t extern inline
+_cap(const metadata *const restrict hdr);
+[[nodiscard, unsequenced]] size_t extern inline
+_len(const metadata *const restrict hdr);
 
-[[nodiscard]] size_t *_ref_len(struct metadata *const restrict hdr) {
-	return &hdr->len;
-}
+[[unsequenced]] void extern inline _set_cap(metadata *const restrict hdr, const size_t new_cap);
+[[unsequenced]] void extern inline _set_len(metadata *const restrict hdr, const size_t new_len);

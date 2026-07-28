@@ -1,0 +1,204 @@
+#!/bin/bash
+
+set -euCEP +k -o pipefail
+shopt -s extglob failglob globasciiranges inherit_errexit
+
+declare err=""
+# ERROR LITERALS
+readonly EINVALID_ARGS_LESS="Function requires more arguments"
+readonly EMKDIR="mkdir failed"
+
+# DIRS/TEMPLATE PREFIXES
+# HEADER FILE
+readonly hdr="./include/"
+# PRIVATE HEADER FILE
+readonly phdr="./include/_"
+# SOURCE FILE
+readonly src="./src/"
+
+readonly HEADER="h"
+readonly PUBLIC="p"
+readonly PRIVATE="P"
+
+clr() {
+	local clr_reset=$'\x1B[39m'
+
+	case "$1" in
+		"CLR_ERROR")
+			printf "\x1B[31m"
+			;;
+		"CLR_HIGHLIGHT")
+			printf "\x1B[33m"
+			;;
+		*)
+			;;
+	esac
+
+	printf "%s$clr_reset" "$2"
+}
+
+func_trace() {
+	local -a res=()
+	# We don't want function trace to print the `main` function, one is the default bash `main` and the second is us calling our logic in `main`,
+	# Moreover, we also don't want trace to print this function itself,
+	# This is why we are skipping the first 1 value and the last 2 values.
+	for (( index=1; index < ${#FUNCNAME[@]} - 2; ++index )); do
+		res+=("$(clr CLR_HIGHLIGHT ${FUNCNAME[index]}) called on line no.: ${BASH_LINENO[index]}")
+	done
+	printf "%s\n" "${res[@]}"
+}
+error() {
+	# Fills a default bad error message if no argument is provided.
+	err="${1:-"Some error occurred"}"
+	err+=$'\n'
+	err+="$(func_trace)"
+	err+=$'\n'
+}
+perror() {
+	clr "CLR_ERROR" "$err"
+}
+
+header() {
+	if [[ $# -eq 0 || -z $1 ]]; then
+		error "$EINVALID_ARGS_LESS"
+		return 1
+	fi
+
+	if [[ ! -d "$hdr" ]]; then
+		if ! mkdir "$hdr"; then
+			exit 1
+		fi
+		printf "%s created.\n" "$hdr"
+	fi
+	if ! touch "${hdr}${1}.h"; then
+		exit 1
+	fi
+	printf "%s created.\n" "${hdr}${1}.h"
+}
+public() {
+	if [[ $# -eq 0 || -z $1 ]]; then
+		error "$EINVALID_ARGS_LESS"
+		return 1
+	fi
+	
+	header "$1"
+	
+	if [[ ! -d "$src" ]]; then
+		if ! mkdir "$src"; then
+			exit 1
+		fi
+		printf "%s created.\n" "$src"
+	fi
+	if ! touch "${src}${1}.c"; then
+		exit 1
+	fi
+	printf "%s created.\n" "${src}${1}.c"
+}
+private() {
+	if [[ $# -eq 0 || -z $1 ]]; then
+		error "$EINVALID_ARGS_LESS"
+		return 1
+	fi
+	
+	public "$1"
+	
+	if ! touch "${phdr}${1}.h"; then
+		exit 1
+	fi
+	printf "%s created.\n" "${phdr}${1}.h"
+}
+
+main() {
+	local -i is_ignored=0
+	local filetype=""
+	local -a filenames=()
+	
+	for arg in "$@"; do
+		if [[ ! "$arg" =~ ^- ]]; then
+			# The CLI argument mustn't contain any spaces and there should only be one file name provided,
+			if [[ "$arg" == *" "* ]]; then
+				error "$EINVALID_ARGS_LESS"
+				return 1
+			fi
+			filenames+=("$arg")
+			continue
+		fi
+
+		# Process flags
+		for (( index=1; index < ${#arg}; ++index )); do
+			case "${arg:index:1}" in
+				"$HEADER")
+					if [[ ! "$filetype" == "$PUBLIC" || ! "$filetype" == "$PRIVATE" ]]; then
+						filetype="$HEADER"
+					fi
+					;;
+				"$PUBLIC")
+					if [[ ! "$filetype" == "$PRIVATE" ]]; then
+						filetype="$PUBLIC"
+					fi
+					;;
+				"$PRIVATE")
+					filetype="$PRIVATE"
+					;;
+				"i")
+					is_ignored=1
+					;;
+				*)
+					error "$EINVALID_ARGS_LESS"
+					return 1
+			esac
+		done
+	done
+
+	case "$filetype" in
+		"$HEADER")
+			for filename in "${filenames[@]}"; do
+				if ! header filename; then
+					perror
+					return 1
+				fi
+			done
+			;;
+		"$PUBLIC")
+			for filename in "${filenames[@]}"; do
+				if ! public filename; then
+					perror
+					return 1
+				fi
+			done
+			;;
+		"$PRIVATE")
+			for filename in "${filenames[@]}"; do
+				if ! private filename; then
+					perror
+					return 1
+				fi
+			done
+			;;
+		*)
+			for filename in "${filenames[@]}"; do
+				if ! touch "$filename"; then
+					exit 1
+				fi
+				printf "%s created\n" "$filename"
+				if (( is_ignored )); then
+					printf "%s\n" "$filename" >> .gitignore
+					printf "%s added to .gitignore\n" "$filename"
+				fi
+			done
+	esac
+}
+
+# new [-hpiP] filename1 [filename2 [... filenameN]]
+# new [-h | -p | -P | -i] filename1 [filename2 [... filenameN]]
+# -h means only create the header file.
+# -p means create the header and source file.
+# -P means create the header, source and private header file.
+# -i means add the file to .gitignore
+# Any flag mentioned applies to all files mentioned.
+# In the case that more than one of the flags `-h`, `-p`, `-P` and `-i` are mentioned, the highest priority flag is applied.
+# Priority depends on which flag creates more files, `-i` creates only one file, the name that is specified and ranks lower than `-h`.
+if ! main $@; then
+	perror
+	exit 1
+fi

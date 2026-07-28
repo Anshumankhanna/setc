@@ -7,7 +7,31 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct dstring;
+// TYPES
+typedef struct dstring dstring;
+typedef struct sstring sstring;
+typedef struct lstring lstring;
+
+// CONSTRUCTORS
+[[nodiscard]] dstring *new_dstring(const char8_t *const restrict raw_bytes, const size_t write_len, [[maybe_unused]] lstring *restrict err);
+[[nodiscard]] sstring _new_sstring(const char8_t *const restrict raw_bytes, const size_t write_len);
+#define new_sstring(raw_bytes) _new_sstring(raw_bytes, sizeof raw_bytes)
+[[nodiscard]] lstring _new_lstring(const char8_t *const restrict raw_bytes, const size_t write_len);
+#define new_lstring(raw_bytes) _new_lstring(raw_bytes, sizeof raw_bytes)
+
+// DESTRUCTORS
+void del_dstring(dstring *const this);
+
+// GETTERS
+// HDR GETTER
+[[nodiscard]] const metadata *hdr_c_dstring(const dstring *const restrict this);
+[[nodiscard]] metadata *hdr_dstring(dstring *const restrict this);
+[[nodiscard]] const metadata_const_cap *hdr_c_sstring(const sstring *const restrict this);
+[[nodiscard]] metadata_const_cap *hdr_sstring(sstring *const restrict this);
+[[nodiscard]] const metadata *hdr_lstring(const lstring *const restrict this);
+
+// SETTERS
+// CONCATENATIONS
 
 [[nodiscard]] struct dstring *
 struct_dstring_new_char_arr(const char8_t *const restrict raw_string);
@@ -38,23 +62,15 @@ DARRAY_DECL_ADD(struct_dstring_p);
 // `char8_t[]`.
 
 struct sstring;
-[[nodiscard]] inline struct sstring
-struct_sstring_new(const size_t cap, char8_t static_string[const cap]) {
-	return (struct sstring){.hdr = {.cap = cap, .len = 0},
-							.buff = static_string};
-}
+[[nodiscard]] struct sstring
+struct_sstring_new(const size_t cap, char8_t static_string[const cap]);
 
 // Literal dstring i.e. a dstring struct that has a dstring literal buffer i.e.
 // `const char8_t *`.
-struct lstring {
-	const struct metadata hdr;
-	const char8_t *buff;
-};
-[[nodiscard]] inline struct lstring
-struct_lstring_new(const size_t cap, const char8_t *const literal_string) {
-	return (struct lstring){.hdr = {.cap = cap, .len = cap},
-							.buff = literal_string};
-}
+
+struct lstring;
+[[nodiscard]] extern inline struct lstring
+struct_lstring_new(const size_t cap, const char8_t *const literal_string);
 
 #define string_new(_str)                                                       \
 	_Generic(_str,                                                             \
@@ -62,9 +78,9 @@ struct_lstring_new(const size_t cap, const char8_t *const literal_string) {
 		const char8_t *: struct_lstring_new)(sizeof _str - 1, _str)
 
 union string_u {
-	const struct dstring *dstr;
-	const struct sstring *sstr;
-	const struct lstring *lstr;
+	const dstring *dstr;
+	const sstring *sstr;
+	const lstring *lstr;
 };
 enum string_e { TAG_DSTRING, TAG_SSTRING, TAG_LSTRING };
 struct string {

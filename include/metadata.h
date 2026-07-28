@@ -1,32 +1,37 @@
 #ifndef METADATA_H
 #define METADATA_H
 
-struct metadata;
+typedef struct {
+	size_t cap;
+	size_t len;
+} metadata;
+typedef struct {
+	const size_t cap;
+	size_t len;
+} metadata_const_cap;
 
-[[nodiscard, unsequenced]] size_t
-_cap(const struct metadata *const restrict hdr);
-[[nodiscard, unsequenced]] size_t
-_len(const struct metadata *const restrict hdr);
+[[nodiscard, unsequenced]] size_t _cap(const metadata *const restrict hdr);
+[[nodiscard, unsequenced]] size_t _len(const metadata *const restrict hdr);
 
-[[nodiscard]] size_t *_ref_cap(struct metadata *const restrict hdr);
-[[nodiscard]] size_t *_ref_len(struct metadata *const restrict hdr);
+[[unsequenced]] void inline _set_cap(metadata *const restrict hdr, const size_t new_cap) {
+	hdr->cap = new_cap;
+}
+[[unsequenced]] void inline _set_len(metadata *const restrict hdr, const size_t new_len) {
+	hdr->len = new_len;
+}
 
-#define hdr(ptr)                                                               \
+#define get_hdr(ptr)                                                           \
 	_Generic(ptr,                                                              \
-		const struct dstring *: hdr_string,                                    \
-		const struct sstring *: hdr_string,                                    \
-		const struct lstring *: hdr_string,                                    \
-		const darray(struct_dstring_p) *: hdr_darray,                          \
-                                                                               \
-		struct dstring *: hdr_string,                                          \
-		struct sstring *: hdr_string,                                          \
-		struct lstring *: hdr_string,                                          \
-		darray(struct_dstring_p) *: hdr_darray)(ptr)
+		const struct dstring *: hdr_c_dstring,                                 \
+		const struct sstring *: hdr_c_sstring,                                 \
+		const struct lstring *: hdr_lstring,                                   \
+		struct dstring *: hdr_dstring,                                         \
+		struct sstring *: hdr_sstring)(ptr)
 
-#define cap(ptr) _cap(hdr(ptr))
-#define len(ptr) _len(hdr(ptr))
+#define cap(ptr) _cap(get_hdr(ptr))
+#define len(ptr) _len(get_hdr(ptr))
 
-#define ref_cap(ptr) _ref_cap(hdr(ptr))
-#define ref_len(ptr) _ref_len(hdr(ptr))
+#define set_cap(ptr, len) _set_cap(get_hdr(ptr), len)
+#define set_len(ptr, len) _set_len(get_hdr(ptr), len)
 
 #endif
