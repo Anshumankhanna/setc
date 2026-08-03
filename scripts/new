@@ -153,7 +153,7 @@ main() {
 	case "$filetype" in
 		"$HEADER")
 			for filename in "${filenames[@]}"; do
-				if ! header filename; then
+				if ! header "$filename"; then
 					perror
 					return 1
 				fi
@@ -161,7 +161,7 @@ main() {
 			;;
 		"$PUBLIC")
 			for filename in "${filenames[@]}"; do
-				if ! public filename; then
+				if ! public "$filename"; then
 					perror
 					return 1
 				fi
@@ -169,7 +169,7 @@ main() {
 			;;
 		"$PRIVATE")
 			for filename in "${filenames[@]}"; do
-				if ! private filename; then
+				if ! private "$filename"; then
 					perror
 					return 1
 				fi

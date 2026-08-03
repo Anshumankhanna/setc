@@ -1,30 +1,24 @@
 #ifndef ARRAY_DEF_H
 #define ARRAY_DEF_H
 
-#define DARRAY_DECL(TYPE)                                                      \
-	darray(TYPE) {                                                             \
-		struct metadata hdr;                                                   \
-		TYPE buff[];                                                           \
-	}
-
 #define DARRAY_DEF_NEW(TYPE)                                                   \
 	[[nodiscard]] darray(TYPE) *                                               \
-		TYPE##_darray_new(const size_t len, const size_t elem_size) {          \
+		new_darray_##TYPE(const size_t len, const size_t elem_size) {          \
 		darray(TYPE) *const new =                                              \
 			malloc(sizeof(darray(TYPE)) + elem_size * len);                    \
 		if (new == nullptr) {                                                  \
 			return new;                                                        \
 		}                                                                      \
                                                                                \
-		ref_cap(new) = len;                                                    \
-		ref_len(new) = 0;                                                      \
+		set_cap(new, len);                                                     \
+		set_len(new, 0);                                                       \
 		memset(new->buff, 0, cap(new));                                        \
                                                                                \
 		return new;                                                            \
 	}
 
 #define DARRAY_DEF_DEL(TYPE)                                                   \
-	void TYPE##_darray_del(darray(TYPE) *const this) {                         \
+	void del_darray_##TYPE(darray(TYPE) *const this) {                         \
 		if (this == nullptr) {                                                 \
 			return;                                                            \
 		}                                                                      \
@@ -36,7 +30,7 @@
 	}
 #define DARRAY_DEF_ADD(TYPE)                                                   \
 	[[nodiscard]] darray(TYPE) *                                               \
-		TYPE##_darray_add(darray(TYPE) * this, TYPE elem) {                    \
+		add_darray_##TYPE(darray(TYPE) * this, TYPE elem) {                    \
 		if (this == nullptr) {                                                 \
 			return nullptr;                                                    \
 		}                                                                      \
@@ -53,24 +47,13 @@
 			}                                                                  \
                                                                                \
 			this = new;                                                        \
-			ref_cap(this) = new_cap;                                           \
+			set_cap(this, new_cap);                                            \
 		}                                                                      \
                                                                                \
-		this->buff[(ref_len(this))++] = elem;                                  \
+		this->buff[len(this)] = elem;                                          \
+		set_len(this, len(this) + 1);                                          \
                                                                                \
 		return this;                                                           \
-	}
-
-#define sarray_decl(TYPE)                                                      \
-	sarray(TYPE) {                                                             \
-		struct metadata hdr;                                                   \
-		TYPE *buff;                                                            \
-	}
-
-#define const_sarray_decl(TYPE)                                                \
-	const_sarray(TYPE) {                                                       \
-		struct metadata hdr;                                                   \
-		TYPE *const buff;                                                      \
 	}
 
 #endif

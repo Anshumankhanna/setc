@@ -24,14 +24,13 @@ typedef typeof(nullptr) nullptr_t;
 	}
 
 DEF_MAX(size_t)
-
 #define max(a, b) _Generic(a, typeof(b): _Generic(b, size_t: _MAX(size_t)))(a, b)
 
 // DEL FUNCTIONS
 #define del(_ptr)                                                              \
 	_Generic(*_ptr,                                                            \
-		struct dstring: struct_dstring_del,                                      \
-		darray(struct_dstring_p): darray_del(struct_dstring_p),                  \
+		dstring: del_dstring,                                                  \
+		darray(dstring_p): del_darray(dstring_p),                              \
 		default: free)(_ptr)
 
 // STRINGS (char to char8_t)
@@ -39,10 +38,12 @@ DEF_MAX(size_t)
 typedef unsigned char char8_t;
 #endif
 
-[[nodiscard]] inline bool ncmp(const char8_t *const restrict str1,
-							   const char8_t *const restrict str2,
-							   const size_t size) {
-	return strncmp((const char *)str1, (const char *)str2, size) == 0;
-}
+// CAST
+#define cast(TYPE, val) (TYPE) val
+// To convert `char8_t` based string types to `char` based string types
+#define byte_arr(val)                                                       \
+	_Generic(val, const char *: (const char8_t *)val, char *: (char8_t *)val)
+#define char_arr(val)                                                       \
+	_Generic(val, const char8_t *: (const char *)val, char8_t *: (char *)val)
 
 #endif

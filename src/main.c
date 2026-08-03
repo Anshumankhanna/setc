@@ -1,10 +1,10 @@
 #define _CRT_SECURE_NO_WARNINGS
 
+#include "arrays.h"
 #include "metadata.h"
-#include "struct_array.h"
-#include "struct_string.h"
-#include "utilities.h"
 #include "string.h"
+#include "strings.h"
+#include "utilities.h"
 
 #include <direct.h>
 #include <errno.h>
@@ -33,25 +33,25 @@ static enum {
 	CRDIR_INVALID_PATH = ENOENT, // Invalid path
 	CRDIR_ERROR = -1,			 // Some error
 	CRDIR_SUCCESS = 0			 // Success
-} _create_dir(const struct string path) {
+} create_dir([[maybe_unused]] const void *path) {
 	errno = 0;
 
 	const char *buff = nullptr;
-	switch (path.type) {
-		case TAG_DSTRING: {
-			buff = (const char *)path.val.dstr->buff;
-			break;
-		}
-		case TAG_SSTRING: {
-			buff = (const char *)path.val.sstr->buff;
-			break;
-		}
-		case TAG_LSTRING: {
-			buff = (const char *)path.val.lstr->buff;
-			break;
-		}
-		default: unreachable();
-	}
+	// switch (path.type) {
+	// 	case TAG_DSTRING: {
+	// 		buff = (const char *)path.val.dstr->buff;
+	// 		break;
+	// 	}
+	// 	case TAG_SSTRING: {
+	// 		buff = (const char *)path.val.sstr->buff;
+	// 		break;
+	// 	}
+	// 	case TAG_LSTRING: {
+	// 		buff = (const char *)path.val.lstr->buff;
+	// 		break;
+	// 	}
+	// 	default: unreachable();
+	// }
 
 	switch (_mkdir(buff)) {
 		case -1: {
@@ -65,7 +65,6 @@ static enum {
 		default: unreachable();
 	}
 }
-#define create_dir(_str) _create_dir(string(_str))
 
 // static inline bool create_file(const struct string *const restrict path,
 // 							   const struct string *const restrict data) {
@@ -83,11 +82,11 @@ static enum {
 // 	return true;
 // }
 
-int main(const int argc, const char *const *const argv) {
+int main(const int argc, const char *const argv[const]) {
 	constexpr size_t BUFF_SIZE = (size_t)4096;
 	u(8) exit_status = 0uwb;
 
-	darray(struct_dstring_p) *args = nullptr;
+	darray(dstring_p) *args = nullptr;
 	struct dstring *src = nullptr;
 	struct dstring *include = nullptr;
 
@@ -95,11 +94,11 @@ int main(const int argc, const char *const *const argv) {
 		err("Require more arguments");
 	}
 
-	args = darray_new(struct_dstring_p, (size_t)argc - 1);
+	args = new_darray(dstring_p, (size_t)argc - 1);
 	for (size_t index = 0; index < (size_t)argc - 1; ++index) {
-		darray(struct_dstring_p) *const res =
-			darray_add(struct_dstring_p, args,
-					   dstring_new((const char8_t *)argv[index + 1]));
+		darray(dstring_p) *const res =
+			add_darray(dstring_p, args,
+					   new_dstring(cast(const char8_t *, argv[index + 1])));
 		if (res == nullptr) {
 			err("Couldn't allocate all arguments");
 		}
@@ -108,19 +107,23 @@ int main(const int argc, const char *const *const argv) {
 
 	// This `const` qualifier won't let us free `template_dir` since
 	// `template_dir` is acting as a readable string only.
-	const struct dstring *template_dir = nullptr;
+	const dstring *template_dir = nullptr;
 	for (size_t index = 0; index < len(args); ++index) {
-		if (ncmp(args->buff[index]->buff, u8"--help", sizeof "--help") ||
-			ncmp(args->buff[index]->buff, u8"-h", sizeof "-h")) {
+		if (strncmp(char_arr(args->buff[index]->buff), "--help",
+					sizeof "--help") == 0 ||
+			strncmp(char_arr(args->buff[index]->buff), "-h", sizeof "-h") ==
+				0) {
 			// TODO: Generate the help menu.
 			printf("The help menu will be available soon.\n");
 			goto cleanup;
-		} else if (ncmp(args->buff[index]->buff, u8"--version",
-						sizeof "--version") ||
-				   ncmp(args->buff[index]->buff, u8"-v", sizeof "-v")) {
+		} else if (strncmp(char_arr(args->buff[index]->buff), "--version",
+						   sizeof "--version") == 0 ||
+				   strncmp(char_arr(args->buff[index]->buff), "-v",
+						   sizeof "-v") == 0) {
 			printf("Currently at version 0.0.1.\n");
 			goto cleanup;
-		} else if (ncmp(args->buff[index]->buff, u8"-d", sizeof "-d")) {
+		} else if (strncmp(char_arr(args->buff[index]->buff), "-d",
+						   sizeof "-d") == 0) {
 			if (index + 1 == len(args)) {
 				err("\x1B[37m-d\x1B[39m has to be followed with a directory "
 					"name or '.'");
@@ -129,7 +132,8 @@ int main(const int argc, const char *const *const argv) {
 			++index;
 			if (args->buff[index]->buff[0] == '-') {
 				// if curr == "--" and index + 1 < len(&args) and next[0] == '-'
-				if (ncmp(args->buff[index]->buff, u8"--", sizeof "--") != 0 ||
+				if (strncmp(char_arr(args->buff[index]->buff), "--",
+							sizeof "--") != 0 ||
 					index + 1 == len(args) ||
 					args->buff[index + 1]->buff[0] != '-') {
 					err("Invalid arguments provided");
@@ -137,9 +141,10 @@ int main(const int argc, const char *const *const argv) {
 				++index;
 			}
 			// We are adding a default name.
-			if (ncmp(args->buff[index]->buff, u8".", sizeof ".")) {
+			if (strncmp(char_arr(args->buff[index]->buff), ".", sizeof ".") ==
+				0) {
 				del(args->buff[index]);
-				args->buff[index] = dstring_new(u8"cproject");
+				args->buff[index] = new_dstring(u8"cproject");
 				if (args->buff[index] == nullptr) {
 					err("Couldn't change '.' to cproject");
 				}
@@ -155,11 +160,11 @@ int main(const int argc, const char *const *const argv) {
 
 	// We are going to have `_` prefixed c string elements to convert them to
 	// our string type for future use.
-	char8_t _abs_template_dir[BUFF_SIZE] = u8"";
-	struct sstring abs_template_dir = string_new(_abs_template_dir);
-	ref_len(&abs_template_dir) =
-		GetFullPathName((const char *)template_dir->buff, BUFF_SIZE,
-						(char *)abs_template_dir.buff, nullptr);
+	sstring abs_template_dir = new_sstring(BUFF_SIZE);
+	set_len(&abs_template_dir,
+			GetFullPathName((const char *)template_dir->buff, BUFF_SIZE,
+							char_arr(abs_template_dir.buff), nullptr));
+
 	if (len(&abs_template_dir) >= BUFF_SIZE) {
 		err("Buffer allocated to store directory path is too small");
 	}
@@ -178,27 +183,28 @@ int main(const int argc, const char *const *const argv) {
 		default: unreachable();
 	}
 
-// 	constexpr char8_t _gitignore[] = {
-// #embed "../.gitignore" suffix(, )
-// 		'\0'};
-// 	[[maybe_unused]] const struct lstring gitignore = string_new(_gitignore);
-//
-// 	constexpr char8_t _makefile[] = {
-// #embed "../makefile" suffix(, )
-// 		'\0'};
-// 	[[maybe_unused]] const struct lstring makefile = string_new(_makefile);
-//
-// 	constexpr char8_t _clangd[] = {
-// #embed "../.clangd" suffix(, )
-// 		'\0'};
-// 	[[maybe_unused]] const struct lstring clangd = string_new(_clangd);
-//
-// 	constexpr char8_t _clang_format[] = {
-// #embed "../.clang-format" suffix(, )
-// 		'\0'};
-// 	[[maybe_unused]] const struct lstring clang_format =
-// 		string_new(_clang_format);
-//
+	// 	constexpr char8_t _gitignore[] = {
+	// #embed "../.gitignore" suffix(, )
+	// 		'\0'};
+	// 	[[maybe_unused]] const struct lstring gitignore =
+	// string_new(_gitignore);
+	//
+	// 	constexpr char8_t _makefile[] = {
+	// #embed "../makefile" suffix(, )
+	// 		'\0'};
+	// 	[[maybe_unused]] const struct lstring makefile = string_new(_makefile);
+	//
+	// 	constexpr char8_t _clangd[] = {
+	// #embed "../.clangd" suffix(, )
+	// 		'\0'};
+	// 	[[maybe_unused]] const struct lstring clangd = string_new(_clangd);
+	//
+	// 	constexpr char8_t _clang_format[] = {
+	// #embed "../.clang-format" suffix(, )
+	// 		'\0'};
+	// 	[[maybe_unused]] const struct lstring clang_format =
+	// 		string_new(_clang_format);
+
 cleanup:
 	// Cleanup.
 	del(include);
